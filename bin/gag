@@ -37,7 +37,8 @@ if __FILE__ == $0
   end.parse!
   
   # Realize settings
-  #Bio::Log::CLI.configure('bio-gag')
+  Bio::Log::CLI.logger('stderr') #default to STDERR not STDOUT
+  Bio::Log::CLI.configure('bio-gag')
   log = Bio::Log::LoggerPlus.new 'gag'
   Bio::Log::CLI.configure('gag')
 

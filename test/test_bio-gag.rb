@@ -185,4 +185,74 @@ contig00091 5 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaa
       ], out
     end
   end
+
+
+  should "run gagger fix ok, but warn, when there's less sequences than gag errors" do
+    test = "contig00091 1 C 32  ,,..,,......,,,.....,,.,,,,,,,.,  ~~I~~~u~u~t~~~~~~~~~~~~~~~~~~~~~
+contig00091 2 G 32  ,,..,,......,,,.....,,.,,,,,,,.,  {{Ii{{iiii@i{{{iiiii{{i{{{{{{{i{
+contig00091 3 A 33  ,,.$.+1A,,.+1A.+1A.+1A.+1A.+1A.+1A,,,.+1A.+1A.+1A.+1A.+1A,,.+1A,,,,,,,.+1A,^].  z{D${{$$$$!${{{$$$$${{${{{{{{{${E
+contig00091 4 G 32  ,,.,,.....-1G.,,,.....,,.,,,,,,,.,. aaRaaRRRR&RaaaRRRRRaaRaaaaaaaRaU
+contig00091 5 G 32  ,$,$.$,$,$.$.$.$.$*$.$,$,$,$.$.$.$.$.$,$,$.$,$,$,$,$,$,$,$.$,$.$  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa
+contig00090 1 C 32  ,,..,,......,,,.....,,.,,,,,,,.,  ~~I~~~u~u~t~~~~~~~~~~~~~~~~~~~~~
+contig00090 2 G 32  ,,..,,......,,,.....,,.,,,,,,,.,  {{Ii{{iiii@i{{{iiiii{{i{{{{{{{i{
+contig00090 3 A 33  ,,.$.+1A,,.+1A.+1A.+1A.+1A.+1A.+1A,,,.+1A.+1A.+1A.+1A.+1A,,.+1A,,,,,,,.+1A,^].  z{D${{$$$$!${{{$$$$${{${{{{{{{${E
+contig00090 4 G 32  ,,.,,.....-1G.,,,.....,,.,,,,,,,.,. aaRaaRRRR&RaaaRRRRRaaRaaaaaaaRaU
+contig00090 5 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa"
+
+    Tempfile.open('test_gag_fix') do |tempfile|
+      tempfile.puts '>contig00091 with comment'
+      tempfile.puts 'CGAGG'
+      tempfile.close
+
+      command = File.join([File.dirname(__FILE__),%w(.. bin gag)].flatten)+ ' --trace warn --fix '+tempfile.path
+      out = nil
+      err = nil
+      Open3.popen3(command) do |stdin, stdout, stderr|
+        stdin.puts test
+        stdin.close
+        out = stdout.readlines
+        err = stderr.readlines
+      end
+      assert_equal [" WARN bio-gag: Unexpectedly found GAG errors in sequences that weren't in the sequence that are to be fixed: Found gags in 2, but only fixed 1\n"], err
+      assert_equal [
+      ">contig00091\n",
+      "CGAAGG\n",
+      ], out
+    end
+  end
+  
+  should "run gagger with --debug without any big problems" do
+    test = "contig00091 1 C 32  ,,..,,......,,,.....,,.,,,,,,,.,  ~~I~~~u~u~t~~~~~~~~~~~~~~~~~~~~~
+contig00091 2 G 32  ,,..,,......,,,.....,,.,,,,,,,.,  {{Ii{{iiii@i{{{iiiii{{i{{{{{{{i{
+contig00091 3 A 33  ,,.$.+1A,,.+1A.+1A.+1A.+1A.+1A.+1A,,,.+1A.+1A.+1A.+1A.+1A,,.+1A,,,,,,,.+1A,^].  z{D${{$$$$!${{{$$$$${{${{{{{{{${E
+contig00091 4 G 32  ,,.,,.....-1G.,,,.....,,.,,,,,,,.,. aaRaaRRRR&RaaaRRRRRaaRaaaaaaaRaU
+contig00091 5 G 32  ,$,$.$,$,$.$.$.$.$*$.$,$,$,$.$.$.$.$.$,$,$.$,$,$,$,$,$,$,$.$,$.$  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa
+contig00090 1 C 32  ,,..,,......,,,.....,,.,,,,,,,.,  ~~I~~~u~u~t~~~~~~~~~~~~~~~~~~~~~
+contig00090 2 G 32  ,,..,,......,,,.....,,.,,,,,,,.,  {{Ii{{iiii@i{{{iiiii{{i{{{{{{{i{
+contig00090 3 A 33  ,,.$.+1A,,.+1A.+1A.+1A.+1A.+1A.+1A,,,.+1A.+1A.+1A.+1A.+1A,,.+1A,,,,,,,.+1A,^].  z{D${{$$$$!${{{$$$$${{${{{{{{{${E
+contig00090 4 G 32  ,,.,,.....-1G.,,,.....,,.,,,,,,,.,. aaRaaRRRR&RaaaRRRRRaaRaaaaaaaRaU
+contig00090 5 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa"
+
+    Tempfile.open('test_gag_fix') do |tempfile|
+      tempfile.puts '>contig00091 with comment'
+      tempfile.puts 'CGAGG'
+      tempfile.close
+
+      command = File.join([File.dirname(__FILE__),%w(.. bin gag)].flatten)+ ' --trace debug --fix '+tempfile.path
+      out = nil
+      err = nil
+      Open3.popen3(command) do |stdin, stdout, stderr|
+        stdin.puts test
+        stdin.close
+        out = stdout.readlines
+        err = stderr.readlines
+      end
+      assert err.length > 10
+      assert_equal [
+      ">contig00091\n",
+      "CGAAGG\n",
+      ], out
+    end
+  end
+
 end

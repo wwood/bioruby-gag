@@ -128,7 +128,7 @@ class Bio::DB::PileupIterator
     sequence_id_to_gags = {} #Hash of sequence id to array of gag objects
     gags do |gag|
       sequence_id_to_gags[gag.ref_name] ||= []
-      sequence_id_to_gags[gag.ref_name].push gag 
+      sequence_id_to_gags[gag.ref_name].push gag
     end
     log.info "Found #{sequence_id_to_gags.values.flatten.length} gag errors"
     
@@ -150,6 +150,7 @@ class Bio::DB::PileupIterator
         last_gag = 0
         fixed = ''
         toilet.sort{|a,b| a.position<=>b.position}.each do |gag|
+          log.debug "Attempting to fix gag at position #{gag.position} in sequence #{seq_id}, which is #{seq.length} bases long"
           fixed = fixed+seq[last_gag..(gag.position-1)]
           fixed = fixed+seq[(gag.position-1)..(gag.position-1)]
           last_gag = gag.position
@@ -161,7 +162,7 @@ class Bio::DB::PileupIterator
     end
     
     unless accounted_for_seq_ids.length == sequence_id_to_gags.length
-      log.warn "Unexpectedly found GAG errors in sequences that weren't in the sequence that are to be fixed: Found gags in #{gags.length}, but only fixed #{accounted_for_seq_ids.length}"
+      log.warn "Unexpectedly found GAG errors in sequences that weren't in the sequence that are to be fixed: Found gags in #{sequence_id_to_gags.length}, but only fixed #{accounted_for_seq_ids.length}"
     end
     return fixed_sequences
   end
