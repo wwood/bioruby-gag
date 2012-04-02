@@ -22,21 +22,21 @@ class Bio::DB::PileupIterator
     
     each do |pile|
       if piles.length < 2
-        log.debug "Piles cache for this reference sequence less than length 2"
+        #log.debug "Piles cache for this reference sequence less than length 2"
         piles = [piles, pile].flatten
         next
       elsif piles.length < 3
-        log.debug "Piles cache for this reference sequence becoming full"
+        #log.debug "Piles cache for this reference sequence becoming full"
         piles = [piles, pile].flatten
       elsif piles[1].ref_name != pile.ref_name
-        log.debug "Piles cache removed - moving to new contig"
+        #log.debug "Piles cache removed - moving to new contig"
         piles = [pile]
         next
       else
-        log.debug "Piles cache regular push through"
+        #log.debug "Piles cache regular push through"
         piles = [piles[1], piles[2], pile].flatten
       end
-      log.debug "Current piles now at #{piles[0].ref_name}, #{piles.collect{|pile| "#{pile.pos}/#{pile.ref_base}"}.join(', ')}"
+      #log.debug "Current piles now at #{piles[0].ref_name}, #{piles.collect{|pile| "#{pile.pos}/#{pile.ref_base}"}.join(', ')}"
       
       # if not at the start/end of the contig
       first = piles[0]
@@ -45,13 +45,13 @@ class Bio::DB::PileupIterator
       
       # First and third nucleic acids must be the same
       if first.ref_base.upcase != third.ref_base.upcase
-        log.debug "First and third bases are not equivalent (#{first.ref_base.upcase} and #{third.ref_base.upcase}), so not gagging"
+        #log.debug "First and third bases are not equivalent (#{first.ref_base.upcase} and #{third.ref_base.upcase}), so not gagging"
         next
       end
       
       # can't be all one homopolymer
       if first.ref_base.upcase == second.ref_base.upcase
-        log.debug "First and second bases are equivalent, so not gagging"
+        #log.debug "First and second bases are equivalent, so not gagging"
         next
       end
       
@@ -60,11 +60,11 @@ class Bio::DB::PileupIterator
         !(read.insertions[first.pos] and read.insertions[second.pos]) and
         (read.insertions[first.pos] or read.insertions[second.pos])
       end
-      log.debug "Inserting reads after filtering: #{inserting_reads.inspect}"
+      #log.debug "Inserting reads after filtering: #{inserting_reads.inspect}"
       
       # ignore regions that aren't ever going to make it past the next filter
       if inserting_reads.length < min_disagreeing_absolute or inserting_reads.length.to_f/first.coverage < min_disagreeing_proportion
-        log.debug "Insufficient disagreement at step 1, so not calling a gag"
+        #log.debug "Insufficient disagreement at step 1, so not calling a gag"
         next
       end
 
@@ -79,17 +79,17 @@ class Bio::DB::PileupIterator
         base_counts[insert] ||= 0
         base_counts[insert] += 1
       end
-      log.debug "Direction counts of insertions: #{direction_counts.inspect}"
-      log.debug "Base counts of insertions: #{base_counts.inspect}"
+      #log.debug "Direction counts of insertions: #{direction_counts.inspect}"
+      #log.debug "Base counts of insertions: #{base_counts.inspect}"
       max_direction = direction_counts['+']>direction_counts['-'] ? '+' : '-'
       max_base = base_counts.max do |a,b|
         a[1] <=> b[1]
       end[0]
-      log.debug "Picking max direction #{max_direction} and max base #{max_base}"
+      #log.debug "Picking max direction #{max_direction} and max base #{max_base}"
       
       # Only accept positions that are inserting a single base
       if max_base.length > 1
-        log.debug "Maximal insertion is too long, so not calling a gag"
+        #log.debug "Maximal insertion is too long, so not calling a gag"
         next
       end
       
@@ -99,15 +99,15 @@ class Bio::DB::PileupIterator
         insert.upcase!
         read.direction == max_direction and insert == max_base
       end
-      log.debug "Reads counting after final filtering: #{counted_inserts.inspect}"
+      #log.debug "Reads counting after final filtering: #{counted_inserts.inspect}"
       
       coverage = (first.coverage+second.coverage+third.coverage).to_f / 3.0
       coverage_percent = counted_inserts.length.to_f / coverage
-      log.debug "Final abundance calculations: max base #{max_base} (comparison base #{second.ref_base.upcase}) occurs #{counted_inserts.length} times compared to coverage #{coverage} (#{coverage_percent*10}%)"
+      #log.debug "Final abundance calculations: max base #{max_base} (comparison base #{second.ref_base.upcase}) occurs #{counted_inserts.length} times compared to coverage #{coverage} (#{coverage_percent*10}%)"
       if max_base != second.ref_base.upcase or # first and second bases must be the same 
         counted_inserts.length < min_disagreeing_absolute or # require 3 bases in that maximal direction
         coverage_percent < min_disagreeing_proportion # at least 10% of reads with disagree with the consensus and agree with the gag
-        log.debug "Failed final abundance cutoffs, so not calling a gag"
+        #log.debug "Failed final abundance cutoffs, so not calling a gag"
         next          
       end 
       
@@ -136,7 +136,7 @@ class Bio::DB::PileupIterator
     accounted_for_seq_ids = []
     fixed_sequences = {} #Hash of sequence ids to sequences without gag errors
     hash_of_sequence_ids_to_sequence_strings.each do |seq_id, seq|
-      log.debug "Now attempting to fix sequence #{seq_id}, sequence #{seq}"
+      #log.debug "Now attempting to fix sequence #{seq_id}, sequence #{seq}"
       toilet = sequence_id_to_gags[seq_id]
       if toilet.nil?
         # No gag errors found in this sequence (or pessimistically the sequence wasn't in the pileup -leaving that issue to the user though)
@@ -150,11 +150,11 @@ class Bio::DB::PileupIterator
         last_gag = 0
         fixed = ''
         toilet.sort{|a,b| a.position<=>b.position}.each do |gag|
-          log.debug "Attempting to fix gag at position #{gag.position} in sequence #{seq_id}, which is #{seq.length} bases long"
+          #log.debug "Attempting to fix gag at position #{gag.position} in sequence #{seq_id}, which is #{seq.length} bases long"
           fixed = fixed+seq[last_gag..(gag.position-1)]
           fixed = fixed+seq[(gag.position-1)..(gag.position-1)]
           last_gag = gag.position
-          log.debug "After fixing gag at position #{gag.position}, fixed sequence is now #{fixed}"
+          #log.debug "After fixing gag at position #{gag.position}, fixed sequence is now #{fixed}"
         end
         fixed = fixed+seq[last_gag..(seq.length-1)]
         fixed_sequences[seq_id] = fixed
