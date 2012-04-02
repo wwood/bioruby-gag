@@ -11,12 +11,13 @@ if __FILE__ == $0
   # Parse cmd line options
   options = {
     :fix => nil,
+    :logger => 'stderr',
   }
   o = OptionParser.new do |opts|
     opts.banner = "gag [options] <pileup_output>"
 
-    opts.on("--logger filename",String,"Log to file (default STDOUT)") do | name |
-      Bio::Log::CLI.logger(name)
+    opts.on("--logger filename",String,"Log to file (default STDERR)") do | name |
+      options[:logger] = name
     end
     
     opts.on("--trace options",String,"Set log level (default INFO, see bio-logger documentation at https://github.com/pjotrp/bioruby-logger-plugin") do | s |
@@ -37,7 +38,7 @@ if __FILE__ == $0
   end.parse!
   
   # Realize settings
-  Bio::Log::CLI.logger('stderr') #default to STDERR not STDOUT
+  Bio::Log::CLI.logger(options[:logger]) #defaults to STDERR not STDOUT
   Bio::Log::CLI.configure('bio-gag')
   log = Bio::Log::LoggerPlus.new 'gag'
   Bio::Log::CLI.configure('gag')
