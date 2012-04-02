@@ -1,0 +1,83 @@
+#!/usr/bin/env ruby
+
+require 'bio'
+require 'bio-faster'
+
+$:.unshift File.join(File.dirname(__FILE__),'..','lib')
+require 'bio-gag'
+
+
+if __FILE__ == $0
+  require 'optparse'
+  # Parse cmd line options
+  options = {
+    :fix => nil,
+  }
+  o = OptionParser.new do |opts|
+    opts.banner = "gag [options] <pileup_output>"
+
+    opts.on("--logger filename",String,"Log to file (default STDOUT)") do | name |
+      Bio::Log::CLI.logger(name)
+    end
+    
+    opts.on("--trace options",String,"Set log level (default INFO, see bio-logger documentation at https://github.com/pjotrp/bioruby-logger-plugin") do | s |
+      Bio::Log::CLI.trace(s)
+    end
+    
+    opts.on("-q", "--quiet", "Run quietly") do |q|
+      Bio::Log::CLI.trace('error')
+    end
+    
+    opts.on("-v", "--verbose", "Run verbosely") do |v|
+      Bio::Log::CLI.trace('info')
+    end
+    
+    opts.on('--fix CONSENSUS_FASTA_FILE', 'Find gag errors in the pileup file, correct them in CONSENSUS_FASTA_FILE, and print to STDOUT the fixed up consensus') do |v|
+      options[:fix] = v
+    end
+  end.parse!
+  
+  # Realize settings
+  #Bio::Log::CLI.configure('bio-gag')
+  log = Bio::Log::LoggerPlus.new 'gag'
+  Bio::Log::CLI.configure('gag')
+
+  piles = Bio::DB::PileupIterator.new(ARGF)
+
+  if options[:fix]
+    # Cache the fasta sequences
+    sequences = {} # Hash of sequence_id to sequences
+    Bio::Faster.parse(options[:fix]) do |sequence_id, sequence, comment|
+      if sequences[sequence_id]
+        raise Exception, "Unexpectedly found 2 sequences with the same sequence identifier '#{sequence_id}', giving up"
+      end
+      sequences[sequence_id] = sequence
+    end
+    log.info "Cached #{sequences.length} sequences from the consensus fasta file"
+    log.debug "Sequences being fixed hash: #{sequences.inspect}"
+    
+    piles.fix_gags(sequences).sort{|a,b| a[0]<=>b[0]}.each do |name, fixed_seq|
+      puts ">#{name}"
+      puts fixed_seq
+    end
+    
+  else
+    # Don't do anything, just predict them
+    
+    puts %w(
+    ref_name
+    position
+    inserted_base
+    context
+    ).join("\t")
+    
+    piles.gags do |gag|
+      puts [
+        gag.ref_name,
+        gag.position,
+        gag.inserted_base,
+        gag.gagging_pileups.collect{|g| g.ref_base}.join('')
+      ].join("\t")
+    end
+  end
+end
