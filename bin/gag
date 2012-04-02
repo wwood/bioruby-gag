@@ -1,7 +1,6 @@
 #!/usr/bin/env ruby
 
 require 'bio'
-require 'bio-faster'
 
 $:.unshift File.join(File.dirname(__FILE__),'..','lib')
 require 'bio-gag'
@@ -47,11 +46,11 @@ if __FILE__ == $0
   if options[:fix]
     # Cache the fasta sequences
     sequences = {} # Hash of sequence_id to sequences
-    Bio::Faster.parse(options[:fix]) do |sequence_id, sequence, comment|
-      if sequences[sequence_id]
+    Bio::FlatFile.foreach(options[:fix]) do |s|
+      if sequences[s.entry_id]
         raise Exception, "Unexpectedly found 2 sequences with the same sequence identifier '#{sequence_id}', giving up"
       end
-      sequences[sequence_id] = sequence
+      sequences[s.entry_id] = s.seq
     end
     log.info "Cached #{sequences.length} sequences from the consensus fasta file"
     log.debug "Sequences being fixed hash: #{sequences.inspect}"

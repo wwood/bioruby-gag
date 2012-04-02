@@ -138,7 +138,7 @@ class Bio::DB::PileupIterator
     hash_of_sequence_ids_to_sequence_strings.each do |seq_id, seq|
       log.debug "Now attempting to fix sequence #{seq_id}, sequence #{seq}"
       toilet = sequence_id_to_gags[seq_id]
-      if toilet.empty?
+      if toilet.nil?
         # No gag errors found in this sequence (or pessimistically the sequence wasn't in the pileup -leaving that issue to the user though)
         fixed_sequences[seq_id] = seq
       else

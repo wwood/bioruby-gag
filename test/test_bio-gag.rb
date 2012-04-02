@@ -65,7 +65,7 @@ contig00091 5 G 32  ,,..,,......,,,.....,,.,,,,,,,.,  {{Ii{{iiii@i{{{iiiii{{i{{{
 contig00091 6 A 33  ,,.$.+1A,,.+1A.+1A.+1A.+1A.+1A.+1A,,,.+1A.+1A.+1A.+1A.+1A,,.+1A,,,,,,,.+1A,^].  z{D${{$$$$!${{{$$$$${{${{{{{{{${E
 contig00091 7 G 32  ,,.,,.....-1G.,,,.....,,.,,,,,,,.,. aaRaaRRRR&RaaaRRRRRaaRaaaaaaaRaU
 contig00091 8 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa"
-    command = File.join([File.dirname(__FILE__),%w(.. bin gag)].flatten)+ ' --debug'
+    command = File.join([File.dirname(__FILE__),%w(.. bin gag)].flatten)+ ' --trace info'
     out = nil
     err = nil
     Open3.popen3(command) do |stdin, stdout, stderr|
@@ -99,8 +99,8 @@ contig00091 13  A 33  ,,.,,......,,,.....,,.,,,,,,,.,.^]. aaPaa^aaaYaaaaaaaaaaaa
       tempfile.puts '>contig00091'
       tempfile.puts 'GTTCGAGGAGGCA'
       tempfile.close
-      
-      command = File.join([File.dirname(__FILE__),%w(.. bin gag)].flatten)+' --debug --fix '+tempfile.path
+
+      command = File.join([File.dirname(__FILE__),%w(.. bin gag)].flatten)+' --trace error --fix '+tempfile.path
       out = nil
       err = nil
       Open3.popen3(command) do |stdin, stdout, stderr|
@@ -111,8 +111,77 @@ contig00091 13  A 33  ,,.,,......,,,.....,,.,,,,,,,.,.^]. aaPaa^aaaYaaaaaaaaaaaa
       end
       assert_equal [], err
       assert_equal [
-      "'>contig00091'\n",
+      ">contig00091\n",
       "GTTCGAAGGAAGGCA\n"
+      ], out
+    end
+  end
+
+  should "run gagger fix ok with fasta comments" do
+    test = "contig00091 1 G 32  ,,..,,......,,,.....,,.,,,,,,,.,  {;c{{{l{l{l{{{{{{{{{{{{{{{{{{{{U
+contig00091 2 T 32  ,,.-1T.,,.-1T..-1T..-1T.,,,.....,,.,,,,,,,.,  a`$aaa!a!a!aaaaaaaaaaaaaaaaaaaaa
+contig00091 3 T 32  ,,*.,,*.*.*.,,,.....,,.,,,,,,,.,  a`Iaaauauataaaaaaaaaaaaaaaaaaaaa
+contig00091 4 C 32  ,,..,,......,,,.....,,.,,,,,,,.,  ~~I~~~u~u~t~~~~~~~~~~~~~~~~~~~~~
+contig00091 5 G 32  ,,..,,......,,,.....,,.,,,,,,,.,  {{Ii{{iiii@i{{{iiiii{{i{{{{{{{i{
+contig00091 6 A 33  ,,..+1A,,.+1A.+1A.+1A.+1A.+1A.+1A,,,.+1A.+1A.+1A.+1A.+1A,,.+1A,,,,,,,.+1A,^].  z{D${{$$$$!${{{$$$$${{${{{{{{{${E
+contig00091 7 G 32  ,,..,,.....-1G.,,,.....,,.,,,,,,,.,. aaRaaRRRR&RaaaRRRRRaaRaaaaaaaRaU
+contig00091 8 G 32  ,,..,,......,,,.....,,.,,,,,,,.,.  {{Ii{{iiii@i{{{iiiii{{i{{{{{{{i{
+contig00091 9 A 33  ,,.$.+1A,,.+1A.+1A.+1A.+1A.+1A.+1A,,,.+1A.+1A.+1A.+1A.+1A,,.+1A,,,,,,,.+1A,.  z{D${{$$$$!${{{$$$$${{${{{{{{{${E
+contig00091 10 G 32  ,,.,,.....-1G.,,,.....,,.,,,,,,,.,. aaRaaRRRR&RaaaRRRRRaaRaaaaaaaRaU
+contig00091 11 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa
+contig00091 12 C 32  ,,.,,......,,,.....,,.,,,,,,,.,.  ~~i~~~~~~Z~~~~~~~~~~~~~~~~~~~~~r
+contig00091 13  A 33  ,,.,,......,,,.....,,.,,,,,,,.,.^]. aaPaa^aaaYaaaaaaaaaaaaaaaaaaaaaaB"
+    Tempfile.open('test_gag_fix') do |tempfile|
+      tempfile.puts '>contig00091 with comment'
+      tempfile.puts 'GTTCGAGGAGGCA'
+      tempfile.close
+
+      command = File.join([File.dirname(__FILE__),%w(.. bin gag)].flatten)+' --trace error --fix '+tempfile.path
+      out = nil
+      err = nil
+      Open3.popen3(command) do |stdin, stdout, stderr|
+        stdin.puts test
+        stdin.close
+        out = stdout.readlines
+        err = stderr.readlines
+      end
+      assert_equal [], err
+      assert_equal [
+      ">contig00091\n",
+      "GTTCGAAGGAAGGCA\n"
+      ], out
+    end
+  end
+
+  should "run gagger fix when some sequences don't have gag errors" do
+    test = "contig00091 1 C 32  ,,..,,......,,,.....,,.,,,,,,,.,  ~~I~~~u~u~t~~~~~~~~~~~~~~~~~~~~~
+contig00091 2 G 32  ,,..,,......,,,.....,,.,,,,,,,.,  {{Ii{{iiii@i{{{iiiii{{i{{{{{{{i{
+contig00091 3 A 33  ,,.$.+1A,,.+1A.+1A.+1A.+1A.+1A.+1A,,,.+1A.+1A.+1A.+1A.+1A,,.+1A,,,,,,,.+1A,^].  z{D${{$$$$!${{{$$$$${{${{{{{{{${E
+contig00091 4 G 32  ,,.,,.....-1G.,,,.....,,.,,,,,,,.,. aaRaaRRRR&RaaaRRRRRaaRaaaaaaaRaU
+contig00091 5 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa"
+
+    Tempfile.open('test_gag_fix') do |tempfile|
+      tempfile.puts '>contig00091 with comment'
+      tempfile.puts 'CGAGG'
+      tempfile.puts '>contig00092'
+      tempfile.puts 'ATGC'
+      tempfile.close
+
+      command = File.join([File.dirname(__FILE__),%w(.. bin gag)].flatten)+ ' --trace error --fix '+tempfile.path
+      out = nil
+      err = nil
+      Open3.popen3(command) do |stdin, stdout, stderr|
+        stdin.puts test
+        stdin.close
+        out = stdout.readlines
+        err = stderr.readlines
+      end
+      assert_equal [], err
+      assert_equal [
+      ">contig00091\n",
+      "CGAAGG\n",
+      ">contig00092\n",
+      "ATGC\n"
       ], out
     end
   end
