@@ -247,7 +247,7 @@ contig00090 5 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaa
         out = stdout.readlines
         err = stderr.readlines
       end
-      assert err.length > 10
+      assert err.length > 1, "expected more errors"
       assert_equal [
       ">contig00091\n",
       "CGAAGG\n",

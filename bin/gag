@@ -6,12 +6,12 @@ $:.unshift File.join(File.dirname(__FILE__),'..','lib')
 require 'bio-gag'
 
 
-if __FILE__ == $0
   require 'optparse'
   # Parse cmd line options
   options = {
     :fix => nil,
     :logger => 'stderr',
+    :trace => 'info',
   }
   o = OptionParser.new do |opts|
     opts.banner = "gag [options] <pileup_output>"
@@ -21,15 +21,15 @@ if __FILE__ == $0
     end
     
     opts.on("--trace options",String,"Set log level (default INFO, see bio-logger documentation at https://github.com/pjotrp/bioruby-logger-plugin") do | s |
-      Bio::Log::CLI.trace(s)
+      options[:trace] = s
     end
     
     opts.on("-q", "--quiet", "Run quietly") do |q|
-      Bio::Log::CLI.trace('error')
+      options[:trace] = 'error'
     end
     
     opts.on("-v", "--verbose", "Run verbosely") do |v|
-      Bio::Log::CLI.trace('info')
+      options[:trace] = 'info'
     end
     
     opts.on('--fix CONSENSUS_FASTA_FILE', 'Find gag errors in the pileup file, correct them in CONSENSUS_FASTA_FILE, and print to STDOUT the fixed up consensus') do |v|
@@ -38,6 +38,7 @@ if __FILE__ == $0
   end.parse!
   
   # Realize settings
+  Bio::Log::CLI.trace(options[:trace])
   Bio::Log::CLI.logger(options[:logger]) #defaults to STDERR not STDOUT
   Bio::Log::CLI.configure('bio-gag')
   log = Bio::Log::LoggerPlus.new 'gag'
@@ -81,4 +82,3 @@ if __FILE__ == $0
       ].join("\t")
     end
   end
-end

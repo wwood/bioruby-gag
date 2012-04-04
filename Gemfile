@@ -4,7 +4,6 @@ source "http://rubygems.org"
 #   gem "activesupport", ">= 2.3.5"
 #gem 'bio-pileup_iterator'
 gem 'bio-logger', '>=1.0.0'
-gem 'bio-faster', '>=0.2.1'
 
 # Add dependencies to develop your gem here.
 # Include everything needed to run rake, tests, features, etc.

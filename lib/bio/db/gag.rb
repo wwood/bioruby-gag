@@ -97,7 +97,13 @@ class Bio::DB::PileupIterator
         insert = read.insertions[first.pos]
         insert ||= read.insertions[second.pos]
         insert.upcase!
-        read.direction == max_direction and insert == max_base
+        if read.direction == max_direction and insert == max_base
+          # Remove reads that have a star at either of the X positions in the XYX or disagree mismatch on either X, since they are really mismatches, not insertions
+          read.sequence[read.sequence.length-1] == read.sequence[read.sequence.length-3] and
+          read.sequence[read.sequence.length-1] != '*'
+        else
+          false
+        end
       end
       #log.debug "Reads counting after final filtering: #{counted_inserts.inspect}"
       
@@ -108,12 +114,13 @@ class Bio::DB::PileupIterator
         counted_inserts.length < min_disagreeing_absolute or # require 3 bases in that maximal direction
         coverage_percent < min_disagreeing_proportion # at least 10% of reads with disagree with the consensus and agree with the gag
         #log.debug "Failed final abundance cutoffs, so not calling a gag"
-        next          
-      end 
+        next
+      end
       
       # alright, gamut navigated. We have a match, record it
       gag = Bio::Gag.new(second.pos, piles, first.ref_name)
       gags.push gag
+      log.debug "Yielding gag #{gag.inspect}"
       yield gag if block_given?
     end
     
