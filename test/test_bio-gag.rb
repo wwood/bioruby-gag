@@ -38,6 +38,41 @@ contig00091 10  A 33  ,,.,,......,,,.....,,.,,,,,,,.,.^]. aaPaa^aaaYaaaaaaaaaaaa
     expe = {'contig00091' => 'GTTCGAAGGC'}
     assert_equal expe, gags = Bio::DB::PileupIterator.new(test).fix_gags(hash)
   end
+  
+  should "fix gag prespecified" do
+    test = "contig00091 1 G 32  ,,..,,......,,,.....,,.,,,,,,,.,  {;c{{{l{l{l{{{{{{{{{{{{{{{{{{{{U
+contig00091 2 T 32  ,,.-1T.,,.-1T..-1T..-1T.,,,.....,,.,,,,,,,.,  a`$aaa!a!a!aaaaaaaaaaaaaaaaaaaaa
+contig00091 3 T 32  ,,*.,,*.*.*.,,,.....,,.,,,,,,,.,  a`Iaaauauataaaaaaaaaaaaaaaaaaaaa
+contig00091 4 C 32  ,,..,,......,,,.....,,.,,,,,,,.,  ~~I~~~u~u~t~~~~~~~~~~~~~~~~~~~~~
+contig00091 5 G 32  ,,..,,......,,,.....,,.,,,,,,,.,  {{Ii{{iiii@i{{{iiiii{{i{{{{{{{i{
+contig00091 6 A 33  ,,.$.+1A,,.+1A.+1A.+1A.+1A.+1A.+1A,,,.+1A.+1A.+1A.+1A.+1A,,.+1A,,,,,,,.+1A,^].  z{D${{$$$$!${{{$$$$${{${{{{{{{${E
+contig00091 7 G 32  ,,.,,.....-1G.,,,.....,,.,,,,,,,.,. aaRaaRRRR&RaaaRRRRRaaRaaaaaaaRaU
+contig00091 8 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa
+contig00091 9 C 32  ,,.,,......,,,.....,,.,,,,,,,.,.  ~~i~~~~~~Z~~~~~~~~~~~~~~~~~~~~~r
+contig00091 10  A 33  ,,.,,......,,,.....,,.,,,,,,,.,.^]. aaPaa^aaaYaaaaaaaaaaaaaaaaaaaaaaB"
+    hash = {'contig00091' => 'GTTCGAGGC'}
+    expe = {'contig00091' => 'GTTTCGAGGC'}
+    gag1 = Bio::Gag.new(2,nil,'contig00091')
+    gags = {'contig00091' => [gag1]}
+    assert_equal expe, gags = Bio::DB::PileupIterator.new(test).fix_gags(hash, gags)
+  end
+  
+  should "fix gag prespecified in 2 seqs" do
+    hash = {'contig00091' => 'GTTCGAGGC',
+      'contig00092' => 'GAGTTCGAGGC'}
+    expe = {'contig00091' => 'GTTTCGAGGC',
+      'contig00092' => 'GAGTTCGAGGC'}
+      
+    gag1 = Bio::Gag.new(2,nil,'contig00091')
+    gags = {'contig00091' => [gag1]}
+    assert_equal expe, gags = Bio::DB::PileupIterator.new('').fix_gags(hash, gags)
+    
+    gag2 = Bio::Gag.new(8,nil,'contig00092')
+    gags = {'contig00091' => [gag1], 'contig00092' => [gag2]}
+    expe = {'contig00091' => 'GTTTCGAGGC',
+      'contig00092' => 'GAGTTCGAAGGC'}
+    assert_equal expe, gags = Bio::DB::PileupIterator.new('').fix_gags(hash, gags)
+  end
 
   should "fix 2 gags" do
     test = "contig00091 1 G 32  ,,..,,......,,,.....,,.,,,,,,,.,  {;c{{{l{l{l{{{{{{{{{{{{{{{{{{{{U
@@ -81,7 +116,7 @@ contig00091 8 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaa
       ], out
   end
 
-  should "run gagger fix ok" do
+  should "run gagger fix ok without gags pre-specified" do
     test = "contig00091 1 G 32  ,,..,,......,,,.....,,.,,,,,,,.,  {;c{{{l{l{l{{{{{{{{{{{{{{{{{{{{U
 contig00091 2 T 32  ,,.-1T.,,.-1T..-1T..-1T.,,,.....,,.,,,,,,,.,  a`$aaa!a!a!aaaaaaaaaaaaaaaaaaaaa
 contig00091 3 T 32  ,,*.,,*.*.*.,,,.....,,.,,,,,,,.,  a`Iaaauauataaaaaaaaaaaaaaaaaaaaa
@@ -252,6 +287,38 @@ contig00090 5 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaa
       ">contig00091\n",
       "CGAAGG\n",
       ], out
+    end
+  end
+
+ should "run gagger fix ok with prespecified gags" do
+    test = ""
+    Tempfile.open('test_gag_fix') do |tempfile|
+      tempfile.puts '>contig00091'
+      tempfile.puts 'GTTCGAGGAGGCA'
+      tempfile.close
+
+      Tempfile.open('gags_prespecified') do |gags_file|
+        gags_file.puts %w(ref_name  position  inserted_base context).join("\t")
+        gags_file.puts %w(contig00091 2 G CTC).join("\t")
+        gags_file.puts %w(contig00091 4 G CTC).join("\t")
+        gags_file.close
+
+        command = File.join([File.dirname(__FILE__),%w(.. bin gag)].flatten)+" --trace error --fix #{tempfile.path} --gags #{gags_file.path}"
+        out = nil
+        err = nil
+        Open3.popen3(command) do |stdin, stdout, stderr|
+          stdin.puts test
+          stdin.close
+          out = stdout.readlines
+          err = stderr.readlines
+        end
+        assert_equal [], err
+        assert_equal [
+          ">contig00091\n",
+          "GTTTCCGAGGAGGCA\n"
+          ], out
+
+      end
     end
   end
 

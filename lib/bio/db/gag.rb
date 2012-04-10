@@ -127,23 +127,28 @@ class Bio::DB::PileupIterator
     return gags
   end
   
-  # Given a hash containing sequence identifier => sequences, where both key and value are plain old Ruby strings, return the hash with any GAG errors in the sequences fixed
-  def fix_gags(hash_of_sequence_ids_to_sequence_strings)
+  # Given a hash containing sequence identifier => sequences, where both key and value are plain old Ruby strings, return the hash with any GAG errors in the sequences fixed.
+  # If the sequence_id_to_gags argument is specified, the gags are not searched from the pileups. If specified, it should be a hash of reference sequence IDs to an array of Bio::Gag objects
+  def fix_gags(hash_of_sequence_ids_to_sequence_strings, sequence_id_to_gags={})
     log = Bio::Log::LoggerPlus['bio-gag']
     
     # Get the gags
-    sequence_id_to_gags = {} #Hash of sequence id to array of gag objects
-    gags do |gag|
-      sequence_id_to_gags[gag.ref_name] ||= []
-      sequence_id_to_gags[gag.ref_name].push gag
+    if sequence_id_to_gags == {}
+      log.info "Predicting gags from the pileup"
+      gags do |gag|
+        sequence_id_to_gags[gag.ref_name] ||= []
+        sequence_id_to_gags[gag.ref_name].push gag
+      end
+    else
+      log.info "Using pre-specified GAG errors"
     end
-    log.info "Found #{sequence_id_to_gags.values.flatten.length} gag errors"
+    log.info "Found #{sequence_id_to_gags.values.flatten.length} gag errors to fix"
     
     # Make sure all gag errors in the pileup map to a sequence input fasta file by keeping tally
     accounted_for_seq_ids = []
     fixed_sequences = {} #Hash of sequence ids to sequences without gag errors
     hash_of_sequence_ids_to_sequence_strings.each do |seq_id, seq|
-      #log.debug "Now attempting to fix sequence #{seq_id}, sequence #{seq}"
+      log.debug "Now attempting to fix sequence #{seq_id}, sequence #{seq}"
       toilet = sequence_id_to_gags[seq_id]
       if toilet.nil?
         # No gag errors found in this sequence (or pessimistically the sequence wasn't in the pileup -leaving that issue to the user though)
@@ -185,14 +190,22 @@ class Bio::Gag
   # Bio::DB::Pileup objects around the GAG error
   attr_accessor :gagging_pileups
   
+  # The base to be inserted. May be derived from @gagging_pileups if they have been specified
+  attr_writer :inserted_base
+  
   def initialize(position, gagging_pileups, ref_name)
     @position = position
     @gagging_pileups = gagging_pileups
     @ref_name = ref_name
   end
   
+  # The base to be inserted. May be manually specified in @inserted_base, otherwise it is the ref_base derived from @gagging_pileups at the inserted position
   def inserted_base
-    @gagging_pileups[1].ref_base
+    if @inserted_base.nil?
+      @gagging_pileups[1].ref_base
+    else
+      @inserted_base
+    end
   end
 end
 

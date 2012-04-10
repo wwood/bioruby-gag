@@ -7,6 +7,9 @@ require 'bio-gag'
 
 
 require 'optparse'
+require 'csv'
+require 'pp'
+
 
 # Possible operations
 FIND = 'find'
@@ -36,9 +39,17 @@ o = OptionParser.new do |opts|
     options[:trace] = 'info'
   end
   
+  opts.on('--lookahead', 'Work out if gag predictions are supported by orf predictions being extended') do |v|
+    options[:operation] = LOOKAHEAD
+  end
+  
   opts.on('--fix CONSENSUS_FASTA_FILE', 'Find gag errors in the pileup file, correct them in CONSENSUS_FASTA_FILE, and print to STDOUT the fixed up consensus') do |v|
     options[:operation] = FIX
     options[:fix_file] = v
+  end
+  
+  opts.on('-g','--gags GAG_FILE', 'Specify a list of GAG errors to be fixed in tab-separated form (use with --fix, the tab-separated output is from regular output or --lookahead)') do |v|
+    options[:gags_file] = v
   end
 end.parse!
 
@@ -54,7 +65,21 @@ piles = Bio::DB::PileupIterator.new(ARGF)
 if options[:operation] == FIX
   # Cache the fasta sequences
   sequences = {} # Hash of sequence_id to sequences
-  Bio::FlatFile.foreach(options[:fix]) do |s|
+  
+  # Read in the gags if they have already been specified
+  # e.g. contig00125  11130 A GAG
+  gags = {}
+  if options[:gags_file]
+    log.info "Using pre-specified GAG errors from #{options[:gag_file]}"
+    CSV.foreach(options[:gags_file], :headers => true, :col_sep => "\t") do |row|
+      contig = row[0]
+      gag = Bio::Gag.new(row[1].to_i, nil, contig)
+      gags[contig] ||= []
+      gags[contig].push gag
+    end
+  end
+
+  Bio::FlatFile.foreach(options[:fix_file]) do |s|
     if sequences[s.entry_id]
       raise Exception, "Unexpectedly found 2 sequences with the same sequence identifier '#{sequence_id}', giving up"
     end
@@ -63,9 +88,181 @@ if options[:operation] == FIX
   log.info "Cached #{sequences.length} sequences from the consensus fasta file"
   log.debug "Sequences being fixed hash: #{sequences.inspect}"
   
-  piles.fix_gags(sequences).sort{|a,b| a[0]<=>b[0]}.each do |name, fixed_seq|
+  #$stderr.puts gags
+  piles.fix_gags(sequences, gags).sort{|a,b| a[0]<=>b[0]}.each do |name, fixed_seq|
     puts ">#{name}"
     puts fixed_seq
+  end
+  
+elsif options[:operation] == LOOKAHEAD
+  # Given a list of gag errors and gene predictions before and after, second-guess whether they are really true gag errors
+  # * Where there is only 1 gene predicted, go with that
+  # * Where both sets predict the same thing, go with either
+  # * Where the sets disagree and there is more than 2 total, give up and go manual
+  # * Where the sets disagree and there is one from each, starting from the gag error and working in the direction of the gene in the 2 frames
+  # ** Where there is two gag errors predicted in the same gene, give up and go manual.
+  
+  genes1_file = ARGV[0]
+  genes2_file = ARGV[1]
+  gag_predictions_file = ARGV[2]
+  
+  class GenePrediction
+    attr_accessor :start, :stop, :direction, :name
+  end
+  
+  class Gag
+    attr_accessor :ref_name, :position, :inserted_base, :context, :adjusted_position
+  end
+  
+  # Read in all the gene predictions
+  add_genes = lambda do |file|
+    hash = {} #hash of contig to array of GenePrediction objects
+    Bio::FlatFile.foreach(file) do |s|
+      # ["contig00001_1_1", "#", "412", "#", "624", "#", "1", "#", "ID=1_1;partial=00;start_type=ATG;rbs_motif=None;rbs_spacer=None"]
+      splits = s.definition.split(' ')
+      gene = GenePrediction.new
+      contig = splits[0].match(/(.+)_\d+_\d+$/)[1]
+      gene.start = splits[2].to_i
+      gene.stop = splits[4].to_i
+      gene.direction = splits[6]
+      gene.name = splits[0]
+      
+      raise Exception, "Unexpected format for gene start (#{splits[3]}) or stop (#{splits[5]}) in fasta header #{s.definition}" if gene.start == 0 or gene.stop == 0
+      raise unless %w(1 -1).include? gene.direction
+      
+      hash[contig] ||= []
+      hash[contig].push gene
+    end
+    hash
+  end
+  genes_before_unchanged = add_genes.call(genes1_file)
+  genes_after = add_genes.call(genes2_file)
+  
+  # Read in the gag output file
+  gags = {} #hash of contigs to gag predictions (positions along the genome)
+  CSV.foreach(gag_predictions_file, :col_sep => "\t", :headers => true) do |row|
+    contig = row[0]
+    
+    gag = Gag.new
+    gag.ref_name = row[0]
+    gag.position = row[1].to_i
+    gag.inserted_base = row[2]
+    gag.context = row[3]
+    
+    gags[contig] ||= []
+    gags[contig].push gag
+  end
+  
+  # Change the bases numbers of the gene predictions in the beforehand gene predictions to be in line so both sets of gene predictions line up
+  genes_before = {}
+  genes_before_unchanged.each do |contig, preds|
+    preds.each do |gene|
+      unless gags[contig].nil?
+        gags_before_start = gags[contig].count do |pos|
+          pos.position < gene.start
+        end
+        gene.start = gene.start+gags_before_start
+        
+        gags_before_stop = gags[contig].count do |pos|
+          pos.position < gene.stop
+        end
+        gene.stop = gene.stop+gags_before_stop
+      end
+      
+      genes_before[contig] ||= []
+      genes_before[contig].push gene
+    end
+  end
+  
+  # Change the base numbers of the gag errors
+  gags.each do |contig, pregagged|
+    count = 0
+    pregagged.each do |g|
+      g.adjusted_position = g.position+count
+      count += 1
+    end
+  end
+  
+  print_gag = lambda do |gag_object|
+    puts [
+      gag_object.ref_name,
+      gag_object.position,
+      gag_object.inserted_base,
+      gag_object.context
+    ].join("\t")
+  end
+  
+  # print headers
+  puts %w(ref_name  position  inserted_base context).join("\t")
+  
+  # Iterate through the gag erors
+  gags.each do |contig, gags|
+    gags.each do |gag_object|
+      gag = gag_object.adjusted_position
+      # Find overlapping genes from both sets of predictions at this site
+      genes1 = []
+      unless genes_before[contig].nil?
+        genes1 = genes_before[contig].select{|gene| gene.start < gag and gene.stop > gag}
+      end
+      genes2 = []
+      unless genes_after[contig].nil?
+        genes2 = genes_after[contig].select{|gene| gene.start < gag and gene.stop > gag}
+      end
+      
+      # if there is no predictions, then do nothing
+      if genes1.empty? and genes2.empty?
+        log.debug "Gag doesn't fall within any ORFs called on contig #{contig} position #{gag}, ignoring"
+        next
+      end
+      
+      all_genes = [genes1,genes2].flatten
+      manual_message = lambda do 
+        log.info "before: #{genes1.inspect}"
+        log.info "after #{genes2.inspect}"
+      end
+      
+      if all_genes.length == 3 and all_genes.collect{|g| g.direction}.uniq.length == 1
+        if genes1.length == 2
+          # 2 genes from before, 1 from after
+          if genes1[0].start == genes2[0].start and genes1[1].stop == genes2[0].stop
+            log.debug "Gag correctly called at #{gag}, I reckon, because there was 1 gene afterwards, 2 from before"
+            print_gag.call gag_object
+          else
+            log.info "2 genes from before, 1 from after, but they don't line up, giving up at #{contig}/#{gag}"
+            manual_message.call
+          end
+        elsif genes2.length == 2
+          # 2 genes from after, 1 from before
+          if genes1[0].start == genes2[0].start and genes1[0].stop == genes2[1].stop
+            log.debug "Gag incorrectly called at #{contig}/#{gag}, I reckon, because there was 2 genes from afterwards, 1 from before"
+          else
+            log.info "1 genes from before, 2 from after, but they don't line up, giving up at #{contig}/#{gag}"
+            manual_message.call
+          end
+        else
+          # 3 genes all from the same set of predictions
+          log.info "3 genes all in the same direction.. whacko.. giving up - gag was at #{contig}/#{gag}"
+          manual_message.call
+        end
+      elsif genes1.length == 1 and genes2.length == 1
+        if genes1[0].stop - genes1[0].start > genes2[0].stop - genes2[0].start
+          log.debug "Gag incorrectly called at contig #{contig}, gag #{gag}"
+        else
+          log.debug "Gag correctly called at contig #{contig}, gag #{gag}"
+          print_gag.call gag_object
+        end
+      elsif all_genes.length == 1
+        if genes1.length == 1
+          log.debug "Gag incorrectly called at contig #{contig}, gag #{gag} because only 1 gene was found"
+        else
+          log.debug "Gag correctly called at contig #{contig}, gag #{gag} because only 1 gene was found"
+          print_gag.call gag_object
+        end          
+      else
+        log.info "Not 3 genes or something is strange with the direction with gag, at #{contig}/#{gag}"
+        manual_message.call
+      end
+    end
   end
   
 else
