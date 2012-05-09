@@ -21,7 +21,22 @@ options = {
   :trace => 'info',
 }
 o = OptionParser.new do |opts|
-  opts.banner = "gag [options] <pileup_output>"
+  opts.banner = "\ngag [options] <pileup_output>\n\n"
+
+
+  opts.on('--lookahead', 'Work out if gag predictions are supported by orf predictions being extended [default is just to print out found gag errors]. There\'s modifed usage too - probably best for you to look at the code if you are using this operation') do |v|
+    options[:operation] = LOOKAHEAD
+  end
+  
+  opts.on('--fix CONSENSUS_FASTA_FILE', 'Find gag errors in the pileup file, correct them in CONSENSUS_FASTA_FILE, and print to STDOUT the fixed up consensus') do |v|
+    options[:operation] = FIX
+    options[:fix_file] = v
+  end
+  
+  opts.on('-g','--gags GAG_FILE', 'Specify a list of GAG errors to be fixed in tab-separated form (use with --fix, the tab-separated output is from regular output or --lookahead)') do |v|
+    options[:gags_file] = v
+  end
+
 
   opts.on("--logger filename",String,"Log to file (default STDERR)") do | name |
     options[:logger] = name
@@ -37,19 +52,6 @@ o = OptionParser.new do |opts|
   
   opts.on("-v", "--verbose", "Run verbosely") do |v|
     options[:trace] = 'info'
-  end
-  
-  opts.on('--lookahead', 'Work out if gag predictions are supported by orf predictions being extended') do |v|
-    options[:operation] = LOOKAHEAD
-  end
-  
-  opts.on('--fix CONSENSUS_FASTA_FILE', 'Find gag errors in the pileup file, correct them in CONSENSUS_FASTA_FILE, and print to STDOUT the fixed up consensus') do |v|
-    options[:operation] = FIX
-    options[:fix_file] = v
-  end
-  
-  opts.on('-g','--gags GAG_FILE', 'Specify a list of GAG errors to be fixed in tab-separated form (use with --fix, the tab-separated output is from regular output or --lookahead)') do |v|
-    options[:gags_file] = v
   end
 end.parse!
 
