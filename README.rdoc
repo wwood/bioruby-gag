@@ -1,8 +1,19 @@
 = bio-gag
 
-bio-gag is a biogem for detecting and correcting a particular type of error that occurs/occurred in a particular version of the IonTorrent sequencing kit. Newer versions of these kits do not appear to be affected by this error.
+bio-gag is a biogem for detecting and correcting a particular type of error that occurs/occurred in particular versions of the IonTorrent sequencing kit:
 
-To search for these errors, a pileup of aligned sequences is required. These can be generated either from an assembly or by aligning to a reference, although it has only been tested on de-novo assemblies assembled with newbler. Note that it is probably not optimised due to time constraints combined with the fact they appear to have been fixed in newer kits.
+* Ion Xpress Template 100 Kit
+* Ion Xpress Template 200 Kit
+* Ion Sequencing 100 Kit
+* Ion Sequencing 200 Kit
+
+Newer versions of these kits do not appear to be affected by this error, starting with the "Ion PGM 200 Sequencing Kit". There are discussions about this on the (closed access) Ion Torrent forum: 
+
+* http://lifetech-it.hosted.jivesoftware.com/message/7893
+* http://lifetech-it.hosted.jivesoftware.com/message/7792
+* http://lifetech-it.hosted.jivesoftware.com/message/6233
+
+To search for these errors, a pileup format file of aligned sequences is required. These can be generated either from an assembly or by aligning to a reference, although it has only been tested on de-novo assemblies assembled with newbler. Note that it is probably not optimised due to time constraints combined with the fact they appear to have been fixed in newer kits.
 
 == Installation
 
@@ -14,9 +25,19 @@ To use the script, the important options are these:
 
         gag [options] <pileup_output>
         
-                --lookahead                  Work out if gag predictions are supported by orf predictions being extended [default is just to print out found gag errors]
-                --fix CONSENSUS_FASTA_FILE   Find gag errors in the pileup file, correct them in CONSENSUS_FASTA_FILE, and print to STDOUT the fixed up consensus
-            -g, --gags GAG_FILE              Specify a list of GAG errors to be fixed in tab-separated form (use with --fix, the tab-separated output is from regular output or --lookahead)
+At first, you probably want to just run it without any options. The output is a list of predicted sites at which the error occurs.
+
+        --lookahead                  Work out if gag predictions are supported by orf predictions being extended [default is just to print out found gag errors]. There's modifed usage too - probably best for you to look at the code if you are using this operation
+        --fix CONSENSUS_FASTA_FILE   Find gag errors in the pileup file, correct them in CONSENSUS_FASTA_FILE, and print to STDOUT the fixed up consensus
+    -g, --gags GAG_FILE              Specify a list of GAG errors to be fixed in tab-separated form (use with --fix, the tab-separated output is from regular output or --lookahead)
+
+And some options for logging:
+
+        --logger filename            Log to file (default STDERR)
+        --trace options              Set log level (default INFO, see bio-logger documentation at https://github.com/pjotrp/bioruby-logger-plugin
+    -q, --quiet                      Run quietly
+    -v, --verbose                    Run verbosely
+
 
 
 == Developers
