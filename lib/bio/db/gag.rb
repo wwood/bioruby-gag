@@ -2,9 +2,11 @@
 
 class Bio::DB::PileupIterator
   # Find places in this pileup that correspond to GAG errors
-  # * Currently XYX in the consensus (i.e. the first and third bases are the same, and different to the middle one). This is actually probably not optimal.
   # * There is at least 3 reads that have an insertion of base Y next to Y, and are all in the one direction. Can change this with options[:min_disagreeing_absolute]
   # * The 3 or more reads form at least a proportion of 0.1 (i.e. 10%) of all the reads at that position.  Can change this with options[:min_disagreeing_proportion]
+  #
+  # * Options:
+  # # :acceptable_gag_errors a whitelist of acceptable sequences to call as errors, that must include reverse complements e.g. ['GAG','CTC']. By default, anything with the consensus XYX is accetable -(i.e. the first and third bases are the same, and different to the middle one). This is actually probably not optimal.
   #
   # Returns an array of Bio::Gag objects
   #
@@ -41,7 +43,12 @@ class Bio::DB::PileupIterator
       # if not at the start/end of the contig
       first = piles[0]
       second = piles[1]
-      third = piles[2] 
+      third = piles[2]
+      
+      # If a particular kind of GAG error has been specified, then require this
+      if options[:acceptable_gag_errors]
+        next unless options[:acceptable_gag_errors].include?("#{first}#{second}#{third}")
+      end
       
       # First and third nucleic acids must be the same
       if first.ref_base.upcase != third.ref_base.upcase
