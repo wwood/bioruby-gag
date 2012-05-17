@@ -13,11 +13,31 @@ contig00091 8 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaa
     assert_equal [6], gags.collect{|g| g.position}
   end
 
+  should "find_gag with first and third bases different, but whitelisted" do
+    test = "contig00091 4 C 32  ,,..,,......,,,.....,,.,,,,,,,.,  ~~I~~~u~u~t~~~~~~~~~~~~~~~~~~~~~
+contig00091 5 G 32  ,,..,,......,,,.....,,.,,,,,,,.,  {{Ii{{iiii@i{{{iiiii{{i{{{{{{{i{
+contig00091 6 C 33  ,,.$.+1C,,.+1C.+1C.+1C.+1C.+1C.+1C,,,.+1C.+1C.+1C.+1C.+1C,,.+1C,,,,,,,.+1C,^].  z{D${{$$$$!${{{$$$$${{${{{{{{{${E
+contig00091 7 A 32  ,,.,,.....-1G.,,,.....,,.,,,,,,,.,. aaRaaRRRR&RaaaRRRRRaaRaaaaaaaRaU
+contig00091 8 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa"
+    gags = Bio::DB::PileupIterator.new(test).gags
+    assert_equal [6], gags.collect{|g| g.position}
+  end
+  
   should "find no gag when XXX" do
     test = "contig00091 4 C 32  ,,..,,......,,,.....,,.,,,,,,,.,  ~~I~~~u~u~t~~~~~~~~~~~~~~~~~~~~~
 contig00091 5 G 32  ,,..,,......,,,.....,,.,,,,,,,.,  {{Ii{{iiii@i{{{iiiii{{i{{{{{{{i{
 contig00091 6 G 33  ,,.$.+1A,,.+1A.+1A.+1A.+1A.+1A.+1A,,,.+1A.+1A.+1A.+1A.+1A,,.+1A,,,,,,,.+1A,^].  z{D${{$$$$!${{{$$$$${{${{{{{{{${E
 contig00091 7 G 32  ,,.,,.....-1G.,,,.....,,.,,,,,,,.,. aaRaaRRRR&RaaaRRRRRaaRaaaaaaaRaU
+contig00091 8 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa"
+    gags = Bio::DB::PileupIterator.new(test).gags
+    assert_equal [], gags.collect{|g| g.position}
+  end
+  
+  should "find no gag with first and third bases are the same but aren't in the whitelist" do
+    test = "contig00091 4 C 32  ,,..,,......,,,.....,,.,,,,,,,.,  ~~I~~~u~u~t~~~~~~~~~~~~~~~~~~~~~
+contig00091 5 C 32  ,,..,,......,,,.....,,.,,,,,,,.,  {{Ii{{iiii@i{{{iiiii{{i{{{{{{{i{
+contig00091 6 A 33  ,,.$.+1A,,.+1A.+1A.+1A.+1A.+1A.+1A,,,.+1A.+1A.+1A.+1A.+1A,,.+1A,,,,,,,.+1A,^].  z{D${{$$$$!${{{$$$$${{${{{{{{{${E
+contig00091 7 C 32  ,,.,,.....-1G.,,,.....,,.,,,,,,,.,. aaRaaRRRR&RaaaRRRRRaaRaaaaaaaRaU
 contig00091 8 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa"
     gags = Bio::DB::PileupIterator.new(test).gags
     assert_equal [], gags.collect{|g| g.position}

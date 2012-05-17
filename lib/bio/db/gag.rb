@@ -2,11 +2,13 @@
 
 class Bio::DB::PileupIterator
   # Find places in this pileup that correspond to GAG errors
+  # * Only certain sequences are considered to be possible errors. Can change this with options[:acceptable_gag_errors]
+  # ** GAAG/CTTC (namesake of GAG errors. So GAG is looked for, to see if it is probably GAAG instead)
+  # ** AGGC/GCCT
+  # ** GCCG/CGGC
+  # ** GCCA/TGGC
   # * There is at least 3 reads that have an insertion of base Y next to Y, and are all in the one direction. Can change this with options[:min_disagreeing_absolute]
   # * The 3 or more reads form at least a proportion of 0.1 (i.e. 10%) of all the reads at that position.  Can change this with options[:min_disagreeing_proportion]
-  #
-  # * Options:
-  # # :acceptable_gag_errors a whitelist of acceptable sequences to call as errors, that must include reverse complements e.g. ['GAG','CTC']. By default, anything with the consensus XYX is accetable -(i.e. the first and third bases are the same, and different to the middle one). This is actually probably not optimal.
   #
   # Returns an array of Bio::Gag objects
   #
@@ -16,6 +18,8 @@ class Bio::DB::PileupIterator
     min_disagreeing_proportion ||= 0.1
     min_disagreeing_absolute = options[:min_disagreeing_absolute]
     min_disagreeing_absolute ||= 3
+    
+    options[:acceptable_gag_errors] ||= %w(GAG CTC  AGC GCT  GCG CGC  GCA TGC)
     
     log = Bio::Log::LoggerPlus['bio-gag']
     
@@ -45,22 +49,14 @@ class Bio::DB::PileupIterator
       second = piles[1]
       third = piles[2]
       
-      # If a particular kind of GAG error has been specified, then require this
-      if options[:acceptable_gag_errors]
-        next unless options[:acceptable_gag_errors].include?("#{first}#{second}#{third}")
-      end
-      
-      # First and third nucleic acids must be the same
-      if first.ref_base.upcase != third.ref_base.upcase
-        #log.debug "First and third bases are not equivalent (#{first.ref_base.upcase} and #{third.ref_base.upcase}), so not gagging"
+      # Require particular sequences in the reference sequence
+      ref_bases = "#{first.ref_base}#{second.ref_base}#{third.ref_base}"
+      index = options[:acceptable_gag_errors].index(ref_bases)
+      if index.nil?
+        #log.debug "Sequence #{ref_bases} does not match whitelist, so not calling a gag"
         next
       end
-      
-      # can't be all one homopolymer
-      if first.ref_base.upcase == second.ref_base.upcase
-        #log.debug "First and second bases are equivalent, so not gagging"
-        next
-      end
+      gag_sequence = options[:acceptable_gag_errors][index]
       
       # all reads that have a single insertion after the first or second position, but not both  
       inserting_reads = [first.reads, second.reads].flatten.uniq.select do |read|
@@ -105,9 +101,9 @@ class Bio::DB::PileupIterator
         insert ||= read.insertions[second.pos]
         insert.upcase!
         if read.direction == max_direction and insert == max_base
-          # Remove reads that have a star at either of the X positions in the XYX or disagree mismatch on either X, since they are really mismatches, not insertions
-          read.sequence[read.sequence.length-1] == read.sequence[read.sequence.length-3] and
-          read.sequence[read.sequence.length-1] != '*'
+          # # Remove reads that don't match the first and third bases like the consensus sequence
+          read.sequence[read.sequence.length-1] == third.ref_base and
+          read.sequence[read.sequence.length-3] == first.ref_base
         else
           false
         end
