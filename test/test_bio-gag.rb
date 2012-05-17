@@ -8,7 +8,7 @@ class TestBioGag < Test::Unit::TestCase
 contig00091 5 G 32  ,,..,,......,,,.....,,.,,,,,,,.,  {{Ii{{iiii@i{{{iiiii{{i{{{{{{{i{
 contig00091 6 A 33  ,,.$.+1A,,.+1A.+1A.+1A.+1A.+1A.+1A,,,.+1A.+1A.+1A.+1A.+1A,,.+1A,,,,,,,.+1A,^].  z{D${{$$$$!${{{$$$$${{${{{{{{{${E
 contig00091 7 G 32  ,,.,,.....-1G.,,,.....,,.,,,,,,,.,. aaRaaRRRR&RaaaRRRRRaaRaaaaaaaRaU
-contig00091 8 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa"
+contig00091 8 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa".gsub(/ +/,"\t")
     gags = Bio::DB::PileupIterator.new(test).gags
     assert_equal [6], gags.collect{|g| g.position}
   end
@@ -18,7 +18,7 @@ contig00091 8 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaa
 contig00091 5 G 32  ,,..,,......,,,.....,,.,,,,,,,.,  {{Ii{{iiii@i{{{iiiii{{i{{{{{{{i{
 contig00091 6 C 33  ,,.$.+1C,,.+1C.+1C.+1C.+1C.+1C.+1C,,,.+1C.+1C.+1C.+1C.+1C,,.+1C,,,,,,,.+1C,^].  z{D${{$$$$!${{{$$$$${{${{{{{{{${E
 contig00091 7 A 32  ,,.,,.....-1G.,,,.....,,.,,,,,,,.,. aaRaaRRRR&RaaaRRRRRaaRaaaaaaaRaU
-contig00091 8 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa"
+contig00091 8 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa".gsub(/ +/,"\t")
     gags = Bio::DB::PileupIterator.new(test).gags
     assert_equal [6], gags.collect{|g| g.position}
   end
@@ -28,7 +28,7 @@ contig00091 8 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaa
 contig00091 5 G 32  ,,..,,......,,,.....,,.,,,,,,,.,  {{Ii{{iiii@i{{{iiiii{{i{{{{{{{i{
 contig00091 6 G 33  ,,.$.+1A,,.+1A.+1A.+1A.+1A.+1A.+1A,,,.+1A.+1A.+1A.+1A.+1A,,.+1A,,,,,,,.+1A,^].  z{D${{$$$$!${{{$$$$${{${{{{{{{${E
 contig00091 7 G 32  ,,.,,.....-1G.,,,.....,,.,,,,,,,.,. aaRaaRRRR&RaaaRRRRRaaRaaaaaaaRaU
-contig00091 8 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa"
+contig00091 8 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa".gsub(/ +/,"\t")
     gags = Bio::DB::PileupIterator.new(test).gags
     assert_equal [], gags.collect{|g| g.position}
   end
@@ -38,7 +38,7 @@ contig00091 8 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaa
 contig00091 5 C 32  ,,..,,......,,,.....,,.,,,,,,,.,  {{Ii{{iiii@i{{{iiiii{{i{{{{{{{i{
 contig00091 6 A 33  ,,.$.+1A,,.+1A.+1A.+1A.+1A.+1A.+1A,,,.+1A.+1A.+1A.+1A.+1A,,.+1A,,,,,,,.+1A,^].  z{D${{$$$$!${{{$$$$${{${{{{{{{${E
 contig00091 7 C 32  ,,.,,.....-1G.,,,.....,,.,,,,,,,.,. aaRaaRRRR&RaaaRRRRRaaRaaaaaaaRaU
-contig00091 8 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa"
+contig00091 8 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa".gsub(/ +/,"\t")
     gags = Bio::DB::PileupIterator.new(test).gags
     assert_equal [], gags.collect{|g| g.position}
   end
@@ -53,7 +53,7 @@ contig00091 6 A 33  ,,.$.+1A,,.+1A.+1A.+1A.+1A.+1A.+1A,,,.+1A.+1A.+1A.+1A.+1A,,.
 contig00091 7 G 32  ,,.,,.....-1G.,,,.....,,.,,,,,,,.,. aaRaaRRRR&RaaaRRRRRaaRaaaaaaaRaU
 contig00091 8 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa
 contig00091 9 C 32  ,,.,,......,,,.....,,.,,,,,,,.,.  ~~i~~~~~~Z~~~~~~~~~~~~~~~~~~~~~r
-contig00091 10  A 33  ,,.,,......,,,.....,,.,,,,,,,.,.^]. aaPaa^aaaYaaaaaaaaaaaaaaaaaaaaaaB"
+contig00091 10  A 33  ,,.,,......,,,.....,,.,,,,,,,.,.^]. aaPaa^aaaYaaaaaaaaaaaaaaaaaaaaaaB".gsub(/ +/,"\t")
     hash = {'contig00091' => 'GTTCGAGGC'}
     expe = {'contig00091' => 'GTTCGAAGGC'}
     assert_equal expe, gags = Bio::DB::PileupIterator.new(test).fix_gags(hash)
@@ -69,7 +69,7 @@ contig00091 6 A 33  ,,.$.+1A,,.+1A.+1A.+1A.+1A.+1A.+1A,,,.+1A.+1A.+1A.+1A.+1A,,.
 contig00091 7 G 32  ,,.,,.....-1G.,,,.....,,.,,,,,,,.,. aaRaaRRRR&RaaaRRRRRaaRaaaaaaaRaU
 contig00091 8 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa
 contig00091 9 C 32  ,,.,,......,,,.....,,.,,,,,,,.,.  ~~i~~~~~~Z~~~~~~~~~~~~~~~~~~~~~r
-contig00091 10  A 33  ,,.,,......,,,.....,,.,,,,,,,.,.^]. aaPaa^aaaYaaaaaaaaaaaaaaaaaaaaaaB"
+contig00091 10  A 33  ,,.,,......,,,.....,,.,,,,,,,.,.^]. aaPaa^aaaYaaaaaaaaaaaaaaaaaaaaaaB".gsub(/ +/,"\t")
     hash = {'contig00091' => 'GTTCGAGGC'}
     expe = {'contig00091' => 'GTTTCGAGGC'}
     gag1 = Bio::Gag.new(2,nil,'contig00091')
@@ -107,7 +107,7 @@ contig00091 9 A 33  ,,.$.+1A,,.+1A.+1A.+1A.+1A.+1A.+1A,,,.+1A.+1A.+1A.+1A.+1A,,.
 contig00091 10 G 32  ,,.,,.....-1G.,,,.....,,.,,,,,,,.,. aaRaaRRRR&RaaaRRRRRaaRaaaaaaaRaU
 contig00091 11 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa
 contig00091 12 C 32  ,,.,,......,,,.....,,.,,,,,,,.,.  ~~i~~~~~~Z~~~~~~~~~~~~~~~~~~~~~r
-contig00091 13  A 33  ,,.,,......,,,.....,,.,,,,,,,.,.^]. aaPaa^aaaYaaaaaaaaaaaaaaaaaaaaaaB"
+contig00091 13  A 33  ,,.,,......,,,.....,,.,,,,,,,.,.^]. aaPaa^aaaYaaaaaaaaaaaaaaaaaaaaaaB".gsub(/ +/,"\t")
 
     hash = {'contig00091' => 'GTTCGAGGAGGCA'}
     expe = {'contig00091' => 'GTTCGAAGGAAGGCA'}
@@ -119,7 +119,7 @@ contig00091 13  A 33  ,,.,,......,,,.....,,.,,,,,,,.,.^]. aaPaa^aaaYaaaaaaaaaaaa
 contig00091 5 G 32  ,,..,,......,,,.....,,.,,,,,,,.,  {{Ii{{iiii@i{{{iiiii{{i{{{{{{{i{
 contig00091 6 A 33  ,,.$.+1A,,.+1A.+1A.+1A.+1A.+1A.+1A,,,.+1A.+1A.+1A.+1A.+1A,,.+1A,,,,,,,.+1A,^].  z{D${{$$$$!${{{$$$$${{${{{{{{{${E
 contig00091 7 G 32  ,,.,,.....-1G.,,,.....,,.,,,,,,,.,. aaRaaRRRR&RaaaRRRRRaaRaaaaaaaRaU
-contig00091 8 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa"
+contig00091 8 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa".gsub(/ +/,"\t")
     command = File.join([File.dirname(__FILE__),%w(.. bin gag)].flatten)+ ' --trace info'
     out = nil
     err = nil
@@ -149,7 +149,7 @@ contig00091 9 A 33  ,,.$.+1A,,.+1A.+1A.+1A.+1A.+1A.+1A,,,.+1A.+1A.+1A.+1A.+1A,,.
 contig00091 10 G 32  ,,.,,.....-1G.,,,.....,,.,,,,,,,.,. aaRaaRRRR&RaaaRRRRRaaRaaaaaaaRaU
 contig00091 11 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa
 contig00091 12 C 32  ,,.,,......,,,.....,,.,,,,,,,.,.  ~~i~~~~~~Z~~~~~~~~~~~~~~~~~~~~~r
-contig00091 13  A 33  ,,.,,......,,,.....,,.,,,,,,,.,.^]. aaPaa^aaaYaaaaaaaaaaaaaaaaaaaaaaB"
+contig00091 13  A 33  ,,.,,......,,,.....,,.,,,,,,,.,.^]. aaPaa^aaaYaaaaaaaaaaaaaaaaaaaaaaB".gsub(/ +/,"\t")
     Tempfile.open('test_gag_fix') do |tempfile|
       tempfile.puts '>contig00091'
       tempfile.puts 'GTTCGAGGAGGCA'
@@ -185,7 +185,7 @@ contig00091 9 A 33  ,,.$.+1A,,.+1A.+1A.+1A.+1A.+1A.+1A,,,.+1A.+1A.+1A.+1A.+1A,,.
 contig00091 10 G 32  ,,.,,.....-1G.,,,.....,,.,,,,,,,.,. aaRaaRRRR&RaaaRRRRRaaRaaaaaaaRaU
 contig00091 11 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa
 contig00091 12 C 32  ,,.,,......,,,.....,,.,,,,,,,.,.  ~~i~~~~~~Z~~~~~~~~~~~~~~~~~~~~~r
-contig00091 13  A 33  ,,.,,......,,,.....,,.,,,,,,,.,.^]. aaPaa^aaaYaaaaaaaaaaaaaaaaaaaaaaB"
+contig00091 13  A 33  ,,.,,......,,,.....,,.,,,,,,,.,.^]. aaPaa^aaaYaaaaaaaaaaaaaaaaaaaaaaB".gsub(/ +/,"\t")
     Tempfile.open('test_gag_fix') do |tempfile|
       tempfile.puts '>contig00091 with comment'
       tempfile.puts 'GTTCGAGGAGGCA'
@@ -213,7 +213,7 @@ contig00091 13  A 33  ,,.,,......,,,.....,,.,,,,,,,.,.^]. aaPaa^aaaYaaaaaaaaaaaa
 contig00091 2 G 32  ,,..,,......,,,.....,,.,,,,,,,.,  {{Ii{{iiii@i{{{iiiii{{i{{{{{{{i{
 contig00091 3 A 33  ,,.$.+1A,,.+1A.+1A.+1A.+1A.+1A.+1A,,,.+1A.+1A.+1A.+1A.+1A,,.+1A,,,,,,,.+1A,^].  z{D${{$$$$!${{{$$$$${{${{{{{{{${E
 contig00091 4 G 32  ,,.,,.....-1G.,,,.....,,.,,,,,,,.,. aaRaaRRRR&RaaaRRRRRaaRaaaaaaaRaU
-contig00091 5 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa"
+contig00091 5 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa".gsub(/ +/,"\t")
 
     Tempfile.open('test_gag_fix') do |tempfile|
       tempfile.puts '>contig00091 with comment'
@@ -252,7 +252,7 @@ contig00090 1 C 32  ,,..,,......,,,.....,,.,,,,,,,.,  ~~I~~~u~u~t~~~~~~~~~~~~~~~
 contig00090 2 G 32  ,,..,,......,,,.....,,.,,,,,,,.,  {{Ii{{iiii@i{{{iiiii{{i{{{{{{{i{
 contig00090 3 A 33  ,,.$.+1A,,.+1A.+1A.+1A.+1A.+1A.+1A,,,.+1A.+1A.+1A.+1A.+1A,,.+1A,,,,,,,.+1A,^].  z{D${{$$$$!${{{$$$$${{${{{{{{{${E
 contig00090 4 G 32  ,,.,,.....-1G.,,,.....,,.,,,,,,,.,. aaRaaRRRR&RaaaRRRRRaaRaaaaaaaRaU
-contig00090 5 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa"
+contig00090 5 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa".gsub(/ +/,"\t")
 
     Tempfile.open('test_gag_fix') do |tempfile|
       tempfile.puts '>contig00091 with comment'
@@ -286,7 +286,7 @@ contig00090 1 C 32  ,,..,,......,,,.....,,.,,,,,,,.,  ~~I~~~u~u~t~~~~~~~~~~~~~~~
 contig00090 2 G 32  ,,..,,......,,,.....,,.,,,,,,,.,  {{Ii{{iiii@i{{{iiiii{{i{{{{{{{i{
 contig00090 3 A 33  ,,.$.+1A,,.+1A.+1A.+1A.+1A.+1A.+1A,,,.+1A.+1A.+1A.+1A.+1A,,.+1A,,,,,,,.+1A,^].  z{D${{$$$$!${{{$$$$${{${{{{{{{${E
 contig00090 4 G 32  ,,.,,.....-1G.,,,.....,,.,,,,,,,.,. aaRaaRRRR&RaaaRRRRRaaRaaaaaaaRaU
-contig00090 5 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa"
+contig00090 5 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa".gsub(/ +/,"\t")
 
     Tempfile.open('test_gag_fix') do |tempfile|
       tempfile.puts '>contig00091 with comment'
