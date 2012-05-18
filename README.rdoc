@@ -7,17 +7,19 @@ bio-gag is a biogem for detecting and correcting a particular type of error that
 * Ion Sequencing 100 Kit
 * Ion Sequencing 200 Kit
 
-Newer versions of these kits do not appear to be affected by this error, starting with the "Ion PGM 200 Sequencing Kit". This was recently refered to in a benchtop sequencing platform comparison
+Newer versions of these kits do not appear to be affected by this error, starting with the "Ion PGM 200 Sequencing Kit". *gag error* is the term I've coined to describe an error that various people have observed on certain sequencing kits with IonTorrent, though it has not previously been characterised very well that I know of (we noticed that the errors seemed to occur at GAG positions in the reads that were supposed to be GAAG). This biogem tries to find and fix these errors.
+
+Errors that appear to be of this type were recently refered to in a benchtop sequencing platform comparison (Supplementary figure 4):
 
 * http://www.ncbi.nlm.nih.gov/pubmed?term=22522955
 
 There are also some more in-depth discussions about this on the (closed access) Ion Torrent forum: 
 
+* http://lifetech-it.hosted.jivesoftware.com/message/6233
 * http://lifetech-it.hosted.jivesoftware.com/message/7893
 * http://lifetech-it.hosted.jivesoftware.com/message/7792
-* http://lifetech-it.hosted.jivesoftware.com/message/6233
 
-To search for these errors, a pileup format file of aligned sequences is required. These can be generated either from an assembly or by aligning to a reference, although it has only been tested on de-novo assemblies assembled with newbler. Note that it is probably not optimised due to time constraints combined with the fact they appear to have been fixed in newer kits.
+To search for these errors, a pileup format file of aligned sequences is required. These can be generated either from an assembly or by aligning to a reference, although it has only been tested on de-novo assemblies assembled with newbler. Note that it has not been entirely optimised due to regular time constraints combined with the fact they appear to have been fixed in newer kits.
 
 == Installation
 
@@ -61,7 +63,7 @@ Information on the source tree, documentation, issues and how to contribute, see
 
 == Cite
 
-  If you use this software, please cite http://dx.doi.org/10.1093/bioinformatics/btq475
+  Currently, this bio-gem is unpublished, but a relevant manuscript is in the works.
 
 == Biogems.info
 
