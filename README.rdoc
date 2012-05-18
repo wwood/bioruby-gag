@@ -7,7 +7,11 @@ bio-gag is a biogem for detecting and correcting a particular type of error that
 * Ion Sequencing 100 Kit
 * Ion Sequencing 200 Kit
 
-Newer versions of these kits do not appear to be affected by this error, starting with the "Ion PGM 200 Sequencing Kit". There are discussions about this on the (closed access) Ion Torrent forum: 
+Newer versions of these kits do not appear to be affected by this error, starting with the "Ion PGM 200 Sequencing Kit". This was recently refered to in a benchtop sequencing platform comparison
+
+* http://www.ncbi.nlm.nih.gov/pubmed?term=22522955
+
+There are also some more in-depth discussions about this on the (closed access) Ion Torrent forum: 
 
 * http://lifetech-it.hosted.jivesoftware.com/message/7893
 * http://lifetech-it.hosted.jivesoftware.com/message/7792
