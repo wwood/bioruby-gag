@@ -120,20 +120,24 @@ contig00091 5 G 32  ,,..,,......,,,.....,,.,,,,,,,.,  {{Ii{{iiii@i{{{iiiii{{i{{{
 contig00091 6 A 33  ,,.$.+1A,,.+1A.+1A.+1A.+1A.+1A.+1A,,,.+1A.+1A.+1A.+1A.+1A,,.+1A,,,,,,,.+1A,^].  z{D${{$$$$!${{{$$$$${{${{{{{{{${E
 contig00091 7 G 32  ,,.,,.....-1G.,,,.....,,.,,,,,,,.,. aaRaaRRRR&RaaaRRRRRaaRaaaaaaaRaU
 contig00091 8 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa".gsub(/ +/,"\t")
-    command = File.join([File.dirname(__FILE__),%w(.. bin gag)].flatten)+ ' --trace info'
-    out = nil
-    err = nil
-    Open3.popen3(command) do |stdin, stdout, stderr|
-      stdin.puts test
-      stdin.close
-      out = stdout.readlines
-      err = stderr.readlines
+
+    Tempfile.open('stdin') do |input|
+      input.puts test
+      input.close
+      
+      command = File.join([File.dirname(__FILE__),%w(.. bin gag)].flatten)+ ' --trace warn --no-progress'+' -p '+input.path
+      out = nil
+      err = nil
+      Open3.popen3(command) do |stdin, stdout, stderr|
+        out = stdout.readlines
+        err = stderr.readlines
+      end
+      assert_equal [], err
+      assert_equal [
+        "ref_name\tposition\tinserted_base\tcontext\n",
+        "contig00091\t6\tA\tGAG\n"
+        ], out
     end
-    assert_equal [], err
-    assert_equal [
-      "ref_name\tposition\tinserted_base\tcontext\n",
-      "contig00091\t6\tA\tGAG\n"
-      ], out
   end
 
   should "run gagger fix ok without gags pre-specified" do
@@ -154,21 +158,24 @@ contig00091 13  A 33  ,,.,,......,,,.....,,.,,,,,,,.,.^]. aaPaa^aaaYaaaaaaaaaaaa
       tempfile.puts '>contig00091'
       tempfile.puts 'GTTCGAGGAGGCA'
       tempfile.close
+      
+      Tempfile.open('stdin') do |input|
+        input.puts test
+        input.close
 
-      command = File.join([File.dirname(__FILE__),%w(.. bin gag)].flatten)+' --trace error --fix '+tempfile.path
-      out = nil
-      err = nil
-      Open3.popen3(command) do |stdin, stdout, stderr|
-        stdin.puts test
-        stdin.close
-        out = stdout.readlines
-        err = stderr.readlines
+        command = File.join([File.dirname(__FILE__),%w(.. bin gag)].flatten)+' --trace error --fix '+tempfile.path+' -p '+input.path
+        out = nil
+        err = nil
+        Open3.popen3(command) do |stdin, stdout, stderr|
+          out = stdout.readlines
+          err = stderr.readlines
+        end
+        assert_equal [], err
+        assert_equal [
+        ">contig00091\n",
+        "GTTCGAAGGAAGGCA\n"
+        ], out
       end
-      assert_equal [], err
-      assert_equal [
-      ">contig00091\n",
-      "GTTCGAAGGAAGGCA\n"
-      ], out
     end
   end
 
@@ -191,20 +198,23 @@ contig00091 13  A 33  ,,.,,......,,,.....,,.,,,,,,,.,.^]. aaPaa^aaaYaaaaaaaaaaaa
       tempfile.puts 'GTTCGAGGAGGCA'
       tempfile.close
 
-      command = File.join([File.dirname(__FILE__),%w(.. bin gag)].flatten)+' --trace error --fix '+tempfile.path
-      out = nil
-      err = nil
-      Open3.popen3(command) do |stdin, stdout, stderr|
-        stdin.puts test
-        stdin.close
-        out = stdout.readlines
-        err = stderr.readlines
+      Tempfile.open('stdin') do |input|
+        input.puts test
+        input.close
+        command = File.join([File.dirname(__FILE__),%w(.. bin gag)].flatten)+' --trace error --fix '+tempfile.path+' -p '+input.path
+      
+        out = nil
+        err = nil
+        Open3.popen3(command) do |stdin, stdout, stderr|
+          out = stdout.readlines
+          err = stderr.readlines
+        end
+        assert_equal [], err
+        assert_equal [
+        ">contig00091\n",
+        "GTTCGAAGGAAGGCA\n"
+        ], out
       end
-      assert_equal [], err
-      assert_equal [
-      ">contig00091\n",
-      "GTTCGAAGGAAGGCA\n"
-      ], out
     end
   end
 
@@ -222,22 +232,24 @@ contig00091 5 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaa
       tempfile.puts 'ATGC'
       tempfile.close
 
-      command = File.join([File.dirname(__FILE__),%w(.. bin gag)].flatten)+ ' --trace error --fix '+tempfile.path
-      out = nil
-      err = nil
-      Open3.popen3(command) do |stdin, stdout, stderr|
-        stdin.puts test
-        stdin.close
-        out = stdout.readlines
-        err = stderr.readlines
+      Tempfile.open('stdin') do |input|
+        input.puts test
+        input.close
+        command = File.join([File.dirname(__FILE__),%w(.. bin gag)].flatten)+' --trace error --fix '+tempfile.path+' -p '+input.path
+        out = nil
+        err = nil
+        Open3.popen3(command) do |stdin, stdout, stderr|
+          out = stdout.readlines
+          err = stderr.readlines
+        end
+        assert_equal [], err
+        assert_equal [
+        ">contig00091\n",
+        "CGAAGG\n",
+        ">contig00092\n",
+        "ATGC\n"
+        ], out
       end
-      assert_equal [], err
-      assert_equal [
-      ">contig00091\n",
-      "CGAAGG\n",
-      ">contig00092\n",
-      "ATGC\n"
-      ], out
     end
   end
 
@@ -259,20 +271,25 @@ contig00090 5 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaa
       tempfile.puts 'CGAGG'
       tempfile.close
 
-      command = File.join([File.dirname(__FILE__),%w(.. bin gag)].flatten)+ ' --trace warn --fix '+tempfile.path
-      out = nil
-      err = nil
-      Open3.popen3(command) do |stdin, stdout, stderr|
-        stdin.puts test
-        stdin.close
-        out = stdout.readlines
-        err = stderr.readlines
+      Tempfile.open('stdin') do |input|
+        input.puts test
+        input.close
+        
+        command = File.join([File.dirname(__FILE__),%w(.. bin gag)].flatten)+ ' --trace warn --fix '+tempfile.path+' -p '+input.path
+        out = nil
+        err = nil
+        Open3.popen3(command) do |stdin, stdout, stderr|
+          stdin.puts test
+          stdin.close
+          out = stdout.readlines
+          err = stderr.readlines
+        end
+        assert_equal [" WARN bio-gag: Unexpectedly found GAG errors in sequences that weren't in the sequence that are to be fixed: Found gags in 2, but only fixed 1\n"], err
+        assert_equal [
+        ">contig00091\n",
+        "CGAAGG\n",
+        ], out
       end
-      assert_equal [" WARN bio-gag: Unexpectedly found GAG errors in sequences that weren't in the sequence that are to be fixed: Found gags in 2, but only fixed 1\n"], err
-      assert_equal [
-      ">contig00091\n",
-      "CGAAGG\n",
-      ], out
     end
   end
   
@@ -293,20 +310,23 @@ contig00090 5 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaa
       tempfile.puts 'CGAGG'
       tempfile.close
 
-      command = File.join([File.dirname(__FILE__),%w(.. bin gag)].flatten)+ ' --trace debug --fix '+tempfile.path
-      out = nil
-      err = nil
-      Open3.popen3(command) do |stdin, stdout, stderr|
-        stdin.puts test
-        stdin.close
-        out = stdout.readlines
-        err = stderr.readlines
+      Tempfile.open('stdin') do |input|
+        input.puts test
+        input.close
+        
+        command = File.join([File.dirname(__FILE__),%w(.. bin gag)].flatten)+ ' --trace debug --fix '+tempfile.path+' -p '+input.path
+        out = nil
+        err = nil
+        Open3.popen3(command) do |stdin, stdout, stderr|
+          out = stdout.readlines
+          err = stderr.readlines
+        end
+        assert err.length > 1, "expected more errors"
+        assert_equal [
+        ">contig00091\n",
+        "CGAAGG\n",
+        ], out
       end
-      assert err.length > 1, "expected more errors"
-      assert_equal [
-      ">contig00091\n",
-      "CGAAGG\n",
-      ], out
     end
   end
 
@@ -323,21 +343,23 @@ contig00090 5 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaa
         gags_file.puts %w(contig00091 4 G CTC).join("\t")
         gags_file.close
 
-        command = File.join([File.dirname(__FILE__),%w(.. bin gag)].flatten)+" --trace error --fix #{tempfile.path} --gags #{gags_file.path}"
-        out = nil
-        err = nil
-        Open3.popen3(command) do |stdin, stdout, stderr|
-          stdin.puts test
-          stdin.close
-          out = stdout.readlines
-          err = stderr.readlines
+        Tempfile.open('stdin') do |input|
+          input.puts test
+          input.close
+          
+          command = File.join([File.dirname(__FILE__),%w(.. bin gag)].flatten)+" --trace error --fix #{tempfile.path} --gags #{gags_file.path} -p "+input.path
+          out = nil
+          err = nil
+          Open3.popen3(command) do |stdin, stdout, stderr|
+            out = stdout.readlines
+            err = stderr.readlines
+          end
+          assert_equal [], err
+          assert_equal [
+            ">contig00091\n",
+            "GTTTCCGAGGAGGCA\n"
+            ], out
         end
-        assert_equal [], err
-        assert_equal [
-          ">contig00091\n",
-          "GTTTCCGAGGAGGCA\n"
-          ], out
-
       end
     end
   end

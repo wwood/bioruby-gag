@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'bio'
+require 'progressbar'
 
 $:.unshift File.join(File.dirname(__FILE__),'..','lib')
 require 'bio-gag'
@@ -19,25 +20,47 @@ options = {
   :operation => FIND,
   :logger => 'stderr',
   :trace => 'info',
+  :progress => true,
 }
 o = OptionParser.new do |opts|
-  opts.banner = "\ngag [options] <pileup_output>\n\n"
+  opts.banner = "\ngag <operation> <arguments>\n\n"
 
 
-  opts.on('--lookahead', 'Work out if gag predictions are supported by orf predictions being extended [default is just to print out found gag errors]. There\'s modifed usage too - probably best for you to look at the code if you are using this operation') do |v|
+  opts.separator "\nOperations:\n\n"
+  opts.on('--find', 'Simply find gag errors given a pileup file. This is the default mode of operation. Usage: gag --find <pileup>') do
+    options[:operation] = FIND
+  end
+  opts.on('--lookahead', 'Work out if gag predictions are supported by orf predictions being extended [default is just to print out found gag errors]. '+
+    'Currently requires prodigal gene predictions in fasta format. Usage: gag --lookahead <gene_predictions1> <gene_predictions2> <gag_predictions>') do
     options[:operation] = LOOKAHEAD
   end
-  
-  opts.on('--fix CONSENSUS_FASTA_FILE', 'Find gag errors in the pileup file, correct them in CONSENSUS_FASTA_FILE, and print to STDOUT the fixed up consensus') do |v|
+  opts.on('--fix CONSENSUS_FASTA_FILE', 'Find gag errors in the pileup file, correct them in CONSENSUS_FASTA_FILE, and print to STDOUT the fixed up consensus. '+
+    'Usage: gag --fix <fasta_file> [-g <gag_predictions>]') do |v|
     options[:operation] = FIX
     options[:fix_file] = v
   end
   
+  opts.separator "\nOptions:\n\n"
+  opts.on('-p','--pileup PILEUP_FILE', 'Pileup file to be fixed [required for some operations]') do |v|
+    options[:pileup_file] = v
+  end
+  opts.on('--contexts TRINUCLEOTIDES',"Specify a comma separated set of sequences to look for gag errors in, or \'false\' to look for all possible trinucleotide contexts [Default: #{Bio::DB::PileupIterator::DEFAULT_GAG_ERROR_CONTEXTS.join(',')}]") do |v|
+    if v.downcase=='false'
+      options[:acceptable_gag_errors] = Bio::DB::PileupIterator::ALL_POSSIBLE_GAG_ERROR_CONTEXTS
+    else
+      options[:acceptable_gag_errors] = v.split(',').collect{|s| s.strip}.compact      
+    end
+  end
   opts.on('-g','--gags GAG_FILE', 'Specify a list of GAG errors to be fixed in tab-separated form (use with --fix, the tab-separated output is from regular output or --lookahead)') do |v|
     options[:gags_file] = v
   end
 
 
+
+  opts.separator "\nVerbosity:\n\n"
+  opts.on('--no-progress',"Don't show the progressbar") do
+    options[:progress] = false
+  end
   opts.on("--logger filename",String,"Log to file (default STDERR)") do | name |
     options[:logger] = name
   end
@@ -62,7 +85,10 @@ Bio::Log::CLI.configure('bio-gag')
 log = Bio::Log::LoggerPlus.new 'gag'
 Bio::Log::CLI.configure('gag')
 
-piles = Bio::DB::PileupIterator.new(ARGF)
+piles = nil
+unless options[:pileup_file].nil?
+  piles = Bio::DB::PileupIterator.new(File.open(options[:pileup_file]))
+end
 
 if options[:operation] == FIX
   # Cache the fasta sequences
@@ -107,6 +133,10 @@ elsif options[:operation] == LOOKAHEAD
   genes1_file = ARGV[0]
   genes2_file = ARGV[1]
   gag_predictions_file = ARGV[2]
+  if genes1_file.nil? or genes2_file.nil? or gag_predictions_file.nil?
+    log.error "Lookahead operation requires specific arguments. See 'gag --help'"
+    exit 1
+  end
   
   class GenePrediction
     attr_accessor :start, :stop, :direction, :name
@@ -270,6 +300,11 @@ elsif options[:operation] == LOOKAHEAD
 else
   # Don't do anything, just predict them
   
+  unless options[:pileup_file]
+    log.error "The find operation requires a pileup file, specified by -p/--pileup. See 'gag --help'"
+    exit 1
+  end
+  
   puts %w(
   ref_name
   position
@@ -277,7 +312,16 @@ else
   context
   ).join("\t")
   
-  piles.gags do |gag|
+  options[:acceptable_gag_errors] ||= Bio::DB::PileupIterator::DEFAULT_GAG_ERROR_CONTEXTS
+  log.info "Predicting errors within these contexts: #{options[:acceptable_gag_errors].join(', ')}"
+  
+  progress = nil
+  if options[:progress]
+    num_pileup_columns = File.foreach(options[:pileup_file]).inject(0) {|c, line| c+1}
+    progress = ProgressBar.new('bio-gag',num_pileup_columns)
+  end
+
+  piles.gags(:progressbar => progress) do |gag|
     puts [
       gag.ref_name,
       gag.position,
@@ -285,4 +329,5 @@ else
       gag.gagging_pileups.collect{|g| g.ref_base}.join('')
     ].join("\t")
   end
+  progress.finish if options[:progress]
 end

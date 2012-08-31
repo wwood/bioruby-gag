@@ -1,6 +1,14 @@
 
 
 class Bio::DB::PileupIterator
+  DEFAULT_GAG_ERROR_CONTEXTS = %w(GAG CTC  AGC GCT  GCG CGC  GCA TGC)
+  ALL_POSSIBLE_GAG_ERROR_CONTEXTS = %w(
+      GAG GTG GCG
+      CTC CAC CGC
+      AGA ACA ATA
+      TAT TGT TCT
+      )
+  
   # Find places in this pileup that correspond to GAG errors
   # * Only certain sequences are considered to be possible errors. Can change this with options[:acceptable_gag_errors]
   # ** GAAG/CTTC (namesake of GAG errors. So GAG is looked for, to see if it is probably GAAG instead)
@@ -9,6 +17,8 @@ class Bio::DB::PileupIterator
   # ** GCCA/TGGC
   # * There is at least 3 reads that have an insertion of base Y next to Y, and are all in the one direction. Can change this with options[:min_disagreeing_absolute]
   # * The 3 or more reads form at least a proportion of 0.1 (i.e. 10%) of all the reads at that position.  Can change this with options[:min_disagreeing_proportion]
+  #
+  # To not restrict options[:acceptable_gag_errors] to any sequences, use  Bio::DB::PileupIterator::ALL_POSSIBLE_GAG_ERROR_CONTEXTS
   #
   # Returns an array of Bio::Gag objects
   #
@@ -19,7 +29,7 @@ class Bio::DB::PileupIterator
     min_disagreeing_absolute = options[:min_disagreeing_absolute]
     min_disagreeing_absolute ||= 3
     
-    options[:acceptable_gag_errors] ||= %w(GAG CTC  AGC GCT  GCG CGC  GCA TGC)
+    options[:acceptable_gag_errors] ||= DEFAULT_GAG_ERROR_CONTEXTS
     
     log = Bio::Log::LoggerPlus['bio-gag']
     
@@ -27,6 +37,8 @@ class Bio::DB::PileupIterator
     gags = []
     
     each do |pile|
+      options[:progressbar].inc unless options[:progressbar].nil?
+      
       if piles.length < 2
         #log.debug "Piles cache for this reference sequence less than length 2"
         piles = [piles, pile].flatten
