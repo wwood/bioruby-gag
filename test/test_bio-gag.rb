@@ -139,6 +139,46 @@ contig00091 8 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaa
         ], out
     end
   end
+  
+  should 'run gagger predict with specified contexts correctly' do
+    test = "contig00091 4 C 32  ,,..,,......,,,.....,,.,,,,,,,.,  ~~I~~~u~u~t~~~~~~~~~~~~~~~~~~~~~
+contig00091 5 G 32  ,,..,,......,,,.....,,.,,,,,,,.,  {{Ii{{iiii@i{{{iiiii{{i{{{{{{{i{
+contig00091 6 A 33  ,,.$.+1A,,.+1A.+1A.+1A.+1A.+1A.+1A,,,.+1A.+1A.+1A.+1A.+1A,,.+1A,,,,,,,.+1A,^].  z{D${{$$$$!${{{$$$$${{${{{{{{{${E
+contig00091 7 G 32  ,,.,,.....-1G.,,,.....,,.,,,,,,,.,. aaRaaRRRR&RaaaRRRRRaaRaaaaaaaRaU
+contig00091 8 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaaaaaRaa".gsub(/ +/,"\t")
+
+    Tempfile.open('stdin') do |input|
+      input.puts test
+      input.close
+      
+      command = File.join([File.dirname(__FILE__),%w(.. bin gag)].flatten)+ ' --trace warn --contexts GAG,CGC --no-progress'+' -p '+input.path
+      out = nil
+      err = nil
+      Open3.popen3(command) do |stdin, stdout, stderr|
+        out = stdout.readlines
+        err = stderr.readlines
+      end
+      assert_equal [], err
+      assert_equal [
+        "ref_name\tposition\tinserted_base\tcontext\n",
+        "contig00091\t6\tA\tGAG\n"
+        ], out
+        
+        
+      command = File.join([File.dirname(__FILE__),%w(.. bin gag)].flatten)+ ' --trace warn --contexts TGC,GCA --no-progress'+' -p '+input.path
+      out = nil
+      err = nil
+      Open3.popen3(command) do |stdin, stdout, stderr|
+        out = stdout.readlines
+        err = stderr.readlines
+      end
+      assert_equal [], err
+      assert_equal [
+        "ref_name\tposition\tinserted_base\tcontext\n",
+        # "contig00091\t6\tA\tGAG\n"
+        ], out
+    end
+  end
 
   should "run gagger fix ok without gags pre-specified" do
     test = "contig00091 1 G 32  ,,..,,......,,,.....,,.,,,,,,,.,  {;c{{{l{l{l{{{{{{{{{{{{{{{{{{{{U

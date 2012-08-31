@@ -85,7 +85,7 @@ Bio::Log::CLI.configure('bio-gag')
 log = Bio::Log::LoggerPlus.new 'gag'
 Bio::Log::CLI.configure('gag')
 
-piles = nil
+piles = Bio::DB::PileupIterator.new(nil)
 unless options[:pileup_file].nil?
   piles = Bio::DB::PileupIterator.new(File.open(options[:pileup_file]))
 end
@@ -321,7 +321,10 @@ else
     progress = ProgressBar.new('bio-gag',num_pileup_columns)
   end
 
-  piles.gags(:progressbar => progress) do |gag|
+  piles.gags(:progressbar => progress, 
+    :acceptable_gag_errors => options[:acceptable_gag_errors]
+    ) do |gag|
+
     puts [
       gag.ref_name,
       gag.position,
