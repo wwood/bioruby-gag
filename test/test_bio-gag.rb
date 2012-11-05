@@ -42,6 +42,15 @@ contig00091 8 G 32  ,,.,,....*.,,,.....,,.,,,,,,,.,.  aaRaaRRRRZRaaaRRRRRaaRaaaa
     gags = Bio::DB::PileupIterator.new(test).gags
     assert_equal [], gags.collect{|g| g.position}
   end
+  
+  should 'find gags when ref_base is lower-case' do
+    test = "contig00036 56618 G 19  ......-1C,...,.....,,.  ~~~~~il~~~l~~~~~ll~
+contig00036 56619 c 19  .....*,+1c...,+1c.....,+1c,+1c. tulutI$uuu$uuuuu$$u
+contig00036 56620 T 21  ......,...,.....,,.^].^], qrirqILrrrLrrrrrLLrNE".gsub(/ +/,"\t")
+    
+    gags = Bio::DB::PileupIterator.new(test).gags
+    assert_equal [56619], gags.collect{|g| g.position}
+  end
 
   should "fix gag" do
     test = "contig00091 1 G 32  ,,..,,......,,,.....,,.,,,,,,,.,  {;c{{{l{l{l{{{{{{{{{{{{{{{{{{{{U
@@ -56,7 +65,17 @@ contig00091 9 C 32  ,,.,,......,,,.....,,.,,,,,,,.,.  ~~i~~~~~~Z~~~~~~~~~~~~~~~~
 contig00091 10  A 33  ,,.,,......,,,.....,,.,,,,,,,.,.^]. aaPaa^aaaYaaaaaaaaaaaaaaaaaaaaaaB".gsub(/ +/,"\t")
     hash = {'contig00091' => 'GTTCGAGGC'}
     expe = {'contig00091' => 'GTTCGAAGGC'}
-    assert_equal expe, gags = Bio::DB::PileupIterator.new(test).fix_gags(hash)
+    assert_equal expe, Bio::DB::PileupIterator.new(test).fix_gags(hash)
+  end
+  
+  should 'fix a gag when ref_base is lower-case' do
+    test = "contig00036 1 G 19  ......-1C,...,.....,,.  ~~~~~il~~~l~~~~~ll~
+contig00036 2 c 19  .....*,+1c...,+1c.....,+1c,+1c. tulutI$uuu$uuuuu$$u
+contig00036 3 T 21  ......,...,.....,,.^].^], qrirqILrrrLrrrrrLLrNE".gsub(/ +/,"\t")
+    
+    hash = {'contig00036' => 'GCT'}
+    expe = {'contig00036' => 'GCCT'}
+    assert_equal expe, Bio::DB::PileupIterator.new(test).fix_gags(hash)
   end
   
   should "fix gag prespecified" do

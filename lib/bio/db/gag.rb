@@ -11,7 +11,7 @@ class Bio::DB::PileupIterator
   
   # Find places in this pileup that correspond to GAG errors
   # * Only certain sequences are considered to be possible errors. Can change this with options[:acceptable_gag_errors]
-  # ** GAAG/CTTC (namesake of GAG errors. So GAG is looked for, to see if it is probably GAAG instead)
+  # ** GAAG/CTTC (namesake of GAG errors. I.e. GAG is looked for, to see if it is probably GAAG instead)
   # ** AGGC/GCCT
   # ** GCCG/CGGC
   # ** GCCA/TGGC
@@ -54,7 +54,7 @@ class Bio::DB::PileupIterator
         #log.debug "Piles cache regular push through"
         piles = [piles[1], piles[2], pile].flatten
       end
-      #log.debug "Current piles now at #{piles[0].ref_name}, #{piles.collect{|pile| "#{pile.pos}/#{pile.ref_base}"}.join(', ')}"
+      log.debug "Current piles now at #{piles[0].ref_name}, #{piles.collect{|pile| "#{pile.pos}/#{pile.ref_base}"}.join(', ')}" if log.debug?
       
       # if not at the start/end of the contig
       first = piles[0]
@@ -62,10 +62,10 @@ class Bio::DB::PileupIterator
       third = piles[2]
       
       # Require particular sequences in the reference sequence
-      ref_bases = "#{first.ref_base}#{second.ref_base}#{third.ref_base}"
+      ref_bases = "#{first.ref_base.upcase}#{second.ref_base.upcase}#{third.ref_base.upcase}"
       index = options[:acceptable_gag_errors].index(ref_bases)
       if index.nil?
-        #log.debug "Sequence #{ref_bases} does not match whitelist, so not calling a gag"
+        log.debug "Sequence #{ref_bases} does not match whitelist, so not calling a gag" if log.debug?
         next
       end
       gag_sequence = options[:acceptable_gag_errors][index]
@@ -75,11 +75,11 @@ class Bio::DB::PileupIterator
         !(read.insertions[first.pos] and read.insertions[second.pos]) and
         (read.insertions[first.pos] or read.insertions[second.pos])
       end
-      #log.debug "Inserting reads after filtering: #{inserting_reads.inspect}"
+      log.debug "Inserting reads after filtering: #{inserting_reads.inspect}" if log.debug?
       
       # ignore regions that aren't ever going to make it past the next filter
       if inserting_reads.length < min_disagreeing_absolute or inserting_reads.length.to_f/first.coverage < min_disagreeing_proportion
-        #log.debug "Insufficient disagreement at step 1, so not calling a gag"
+        log.debug "Insufficient disagreement at step 1, so not calling a gag" if log.debug?
         next
       end
 
@@ -94,17 +94,17 @@ class Bio::DB::PileupIterator
         base_counts[insert] ||= 0
         base_counts[insert] += 1
       end
-      #log.debug "Direction counts of insertions: #{direction_counts.inspect}"
-      #log.debug "Base counts of insertions: #{base_counts.inspect}"
+      log.debug "Direction counts of insertions: #{direction_counts.inspect}" if log.debug?
+      log.debug "Base counts of insertions: #{base_counts.inspect}" if log.debug?
       max_direction = direction_counts['+']>direction_counts['-'] ? '+' : '-'
       max_base = base_counts.max do |a,b|
         a[1] <=> b[1]
       end[0]
-      #log.debug "Picking max direction #{max_direction} and max base #{max_base}"
+      log.debug "Picking max direction #{max_direction} and max base #{max_base}" if log.debug?
       
       # Only accept positions that are inserting a single base
       if max_base.length > 1
-        #log.debug "Maximal insertion is too long, so not calling a gag"
+        log.debug "Maximal insertion is too long, so not calling a gag" if log.debug?
         next
       end
       
@@ -113,22 +113,22 @@ class Bio::DB::PileupIterator
         insert ||= read.insertions[second.pos]
         insert.upcase!
         if read.direction == max_direction and insert == max_base
-          # # Remove reads that don't match the first and third bases like the consensus sequence
+          # Remove reads that don't match the first and third bases like the consensus sequence
           read.sequence[read.sequence.length-1] == third.ref_base and
           read.sequence[read.sequence.length-3] == first.ref_base
         else
           false
         end
       end
-      #log.debug "Reads counting after final filtering: #{counted_inserts.inspect}"
+      log.debug "Reads counting after final filtering: #{counted_inserts.inspect}" if log.debug?
       
       coverage = (first.coverage+second.coverage+third.coverage).to_f / 3.0
       coverage_percent = counted_inserts.length.to_f / coverage
-      #log.debug "Final abundance calculations: max base #{max_base} (comparison base #{second.ref_base.upcase}) occurs #{counted_inserts.length} times compared to coverage #{coverage} (#{coverage_percent*10}%)"
+      log.debug "Final abundance calculations: max base #{max_base} (comparison base #{second.ref_base.upcase}) occurs #{counted_inserts.length} times compared to coverage #{coverage} (#{coverage_percent*10}%)" if log.debug?
       if max_base != second.ref_base.upcase or # first and second bases must be the same 
         counted_inserts.length < min_disagreeing_absolute or # require 3 bases in that maximal direction
         coverage_percent < min_disagreeing_proportion # at least 10% of reads with disagree with the consensus and agree with the gag
-        #log.debug "Failed final abundance cutoffs, so not calling a gag"
+        log.debug "Failed final abundance cutoffs, so not calling a gag" if log.debug?
         next
       end
       
