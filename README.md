@@ -26,8 +26,7 @@ There are also some more in-depth discussions about this on the (closed access) 
 
 To search for these errors, a pileup format file of aligned sequences is required. These can be generated
 either from an assembly or by aligning to a reference, although it has only been tested on de-novo assemblies
-assembled with newbler. Note that it has not been entirely optimised due to regular time constraints combined
-with the fact they appear to have been fixed in newer kits.
+assembled with newbler. It has also currently only been tested on Linux, although it probably works on OSX too.
 
 ## Installation
 
