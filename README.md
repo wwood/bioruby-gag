@@ -1,6 +1,6 @@
-= bio-gag
+# bio-gag
 
-bio-gag is a biogem for detecting and correcting a particular type of error that occurs/occurred in particular versions of the IonTorrent sequencing kit:
+bio-gag is a biogem for detecting and correcting a particular type of error that occurs in (at least) these particular versions of the IonTorrent sequencing kit:
 
 * Ion Xpress Template 100 Kit
 * Ion Xpress Template 200 Kit
@@ -29,7 +29,7 @@ either from an assembly or by aligning to a reference, although it has only been
 assembled with newbler. Note that it has not been entirely optimised due to regular time constraints combined
 with the fact they appear to have been fixed in newer kits.
 
-== Installation
+## Installation
 
 Firsts, you'll need to install the Ruby programming language. Instructions on how to do this are available at http://www.ruby-lang.org/
 
@@ -37,7 +37,7 @@ Then, install the bio-gag 'gem':
 
         gem install bio-gag
 
-== Example usage
+## Example usage
 
 First test that installation worked correctly.
 
@@ -55,7 +55,7 @@ However, the gag algorithm is not perfect, so spurious fixes may be applied.
 One way to reduce the incidence of spurious prediction is to only fix those errors that result in longer open reading
 frames being predicted. Disadvantages of doing this include the fact that only errors within open reading frames
 are fixed, and it requires that you are sequencing either a bacteria or an archaeon. The method currently requires
-using the gene predictor Prodigal, for implementation reasons. It can be found at http://compbio.ornl.gov/prodigal/
+using the gene predictor [Prodigal](http://compbio.ornl.gov/prodigal/), for implementation reasons.
 
 First, predict genes before and after the initial gag fixing by running Prodigal
 
@@ -76,20 +76,19 @@ Then finally, do the final fix using the filtered gags file
 
 That output file should hopefully have less gag errors in them than the original fasta file.
 
-== Help
+## Help
 
-If you experience any problems using bio-gag, open an issue on GitHub and tell us about it.
-https://github.com/wwood/bioruby-gag/issues
+If you experience any problems using bio-gag, open an [issue](https://github.com/wwood/bioruby-gag/issues) on GitHub and tell us about it.
 
-== Cite
+## Cite
 
 Currently, this bio-gem is unpublished, but a relevant manuscript is in the works.
 
-== Biogems.info
+## Biogems.info
 
 This Biogem is published at http://biogems.info/index.html#bio-gag
 
-== Copyright
+## Copyright
 
 Copyright (c) 2012 Ben J Woodcroft. See LICENSE.txt for further details.
 
