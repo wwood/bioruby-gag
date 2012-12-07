@@ -9,7 +9,7 @@ bio-gag is a biogem for detecting and correcting a particular type of error that
 
 *Gag error* is the term we've coined to describe an error that various people have observed on 
 certain sequencing kits with IonTorrent, though it has not previously been characterised very well 
-that I know of (we first noticed that the errors seemed to occur at GAG positions in the reads that 
+that we know of (we first noticed that the errors seemed to occur at GAG positions in the reads that 
 were supposed to be GAAG). This biogem tries to find and fix these errors.
 
 Errors that appear to be of this type were recently refered to in a benchtop sequencing platform 
